@@ -227,8 +227,8 @@ function getPositions() {
 	// 	marioX = memory.read_s16_le(0x94)
 	// 	marioY = memory.read_s16_le(0x96)
 	// 	
-	// 	local layer1x = memory.read_s16_le(0x1A);
-	// 	local layer1y = memory.read_s16_le(0x1C);
+	// 	var layer1x = memory.read_s16_le(0x1A);
+	// 	var layer1y = memory.read_s16_le(0x1C);
 	// 	
 	// 	screenX = marioX-layer1x
 	// 	screenY = marioY-layer1y
@@ -249,19 +249,19 @@ function getPositions() {
 // 		
 // 		return memory.readbyte(0x1C800 + math.floor(x/0x10)*0x1B0 + y*0x10 + x%0x10)
 // 	elseif gameinfo.getromname() == "Super Mario Bros." then
-// 		local x = marioX + dx + 8
-// 		local y = marioY + dy - 16
-// 		local page = math.floor(x/256)%2
+// 		var x = marioX + dx + 8
+// 		var y = marioY + dy - 16
+// 		var page = math.floor(x/256)%2
 // 
-// 		local subx = math.floor((x%256)/16)
-// 		local suby = math.floor((y - 32)/16)
-// 		local addr = 0x500 + page*13*16+suby*16+subx
+// 		var subx = math.floor((x%256)/16)
+// 		var suby = math.floor((y - 32)/16)
+// 		var addr = 0x500 + page*13*16+suby*16+subx
 // 		
 // 		if suby >= 13 or suby < 0 then
 // 			return 0
 // 		end
 // 		
-// 		if memory.readbyte(addr) ~= 0 then
+// 		if memory.readbyte(addr) != 0 then
 // 			return 1
 // 		else
 // 			return 0
@@ -271,10 +271,10 @@ function getPositions() {
 
 // function getSprites()
 // 	if gameinfo.getromname() == "Super Mario World (USA)" then
-// 		local sprites = {}
+// 		var sprites = {}
 // 		for slot=0,11 do
-// 			local status = memory.readbyte(0x14C8+slot)
-// 			if status ~= 0 then
+// 			var status = memory.readbyte(0x14C8+slot)
+// 			if status != 0 then
 // 				spritex = memory.readbyte(0xE4+slot) + memory.readbyte(0x14E0+slot)*256
 // 				spritey = memory.readbyte(0xD8+slot) + memory.readbyte(0x14D4+slot)*256
 // 				sprites[#sprites+1] = {["x"]=spritex, ["y"]=spritey}
@@ -283,12 +283,12 @@ function getPositions() {
 // 		
 // 		return sprites
 // 	elseif gameinfo.getromname() == "Super Mario Bros." then
-// 		local sprites = {}
+// 		var sprites = {}
 // 		for slot=0,4 do
-// 			local enemy = memory.readbyte(0xF+slot)
-// 			if enemy ~= 0 then
-// 				local ex = memory.readbyte(0x6E + slot)*0x100 + memory.readbyte(0x87+slot)
-// 				local ey = memory.readbyte(0xCF + slot)+24
+// 			var enemy = memory.readbyte(0xF+slot)
+// 			if enemy != 0 then
+// 				var ex = memory.readbyte(0x6E + slot)*0x100 + memory.readbyte(0x87+slot)
+// 				var ey = memory.readbyte(0xCF + slot)+24
 // 				sprites[#sprites+1] = {["x"]=ex,["y"]=ey}
 // 			end
 // 		end
@@ -299,10 +299,10 @@ function getPositions() {
 
 // function getExtendedSprites()
 // 	if gameinfo.getromname() == "Super Mario World (USA)" then
-// 		local extended = {}
+// 		var extended = {}
 // 		for slot=0,11 do
-// 			local number = memory.readbyte(0x170B+slot)
-// 			if number ~= 0 then
+// 			var number = memory.readbyte(0x170B+slot)
+// 			if number != 0 then
 // 				spritex = memory.readbyte(0x171F+slot) + memory.readbyte(0x1733+slot)*256
 // 				spritey = memory.readbyte(0x1715+slot) + memory.readbyte(0x1729+slot)*256
 // 				extended[#extended+1] = {["x"]=spritex, ["y"]=spritey}
@@ -399,10 +399,10 @@ function newSpecies() {
 
 function newGenome() {
     var genome = {}
-	genome.genes = {}
+	genome.genes = []
 	genome.fitness = 0
 	genome.adjustedFitness = 0
-	genome.network = {}
+	genome.network = []
 	genome.maxneuron = 0
 	genome.globalRank = 0
 	genome.mutationRates = {}
@@ -419,8 +419,8 @@ function newGenome() {
 
 function copyGenome(genome){
     var genome2 = newGenome()
-	for (var g = 1,genome.gene.length){
-        table.insert(genome2.genes, copyGene(genome.genes[g]))
+	for (var g = 1; i < genome.gene.length; i++){
+        genome2.genes.push(copyGene(genome.genes[g]))
     } 
 	genome2.maxneuron = genome.maxneuron
 	genome2.mutationRates["connections"] = genome.mutationRates["connections"]
@@ -485,8 +485,7 @@ function generateNetwork(genome){
         network.neurons[MaxNodes+o] = newNeuron()
     }
 		
-	genome.genes.sort(function (a,b) {return a.out < b.out})
-	
+	genome.genes.sort(function (a,b) {return a.out < b.out})	
     
 	for (var i=1;i < genome.genes.length; i++){
 		var gene = genome.genes[i]
@@ -499,8 +498,7 @@ function generateNetwork(genome){
 			if (network.neurons[gene.into] == null){ 
 				network.neurons[gene.into] = newNeuron()
             }
-        }
-		
+        }		
     }
 	
 	genome.network = network 
@@ -509,20 +507,20 @@ function generateNetwork(genome){
 
 function evaluateNetwork(network, inputs){
     table.insert(inputs, 1)
-	if #inputs ~= Inputs then
+	if (inputs.length != Inputs){
 		console.writeline("Incorrect number of neural network inputs.")
 		return {}
-	end
-	
+	}
+		
 	for i=1,Inputs do
 		network.neurons[i].value = inputs[i]
 	end
 	
 	for _,neuron in pairs(network.neurons) do
-		local sum = 0
+		var sum = 0
 		for j = 1,#neuron.incoming do
-			local incoming = neuron.incoming[j]
-			local other = network.neurons[incoming.into]
+			var incoming = neuron.incoming[j]
+			var other = network.neurons[incoming.into]
 			sum = sum + incoming.weight * other.value
 		end
 		
@@ -533,7 +531,7 @@ function evaluateNetwork(network, inputs){
 	
 	var outputs = {}
 	for o=1,Outputs do
-		local button = "P1 " .. ButtonNames[o]
+		var button = "P1 " .. ButtonNames[o]
 		if network.neurons[MaxNodes+o].value > 0 then
 			outputs[button] = true
 		else
@@ -557,14 +555,14 @@ function crossover(g1, g2){
 	var innovations2 = {}
     
 	for i=1,#g2.genes do
-		local gene = g2.genes[i]
+		var gene = g2.genes[i]
 		innovations2[gene.innovation] = gene
 	end
 	
 	for i=1,#g1.genes do
-		local gene1 = g1.genes[i]
-		local gene2 = innovations2[gene1.innovation]
-		if gene2 ~= nil and math.random(2) == 1 and gene2.enabled then
+		var gene1 = g1.genes[i]
+		var gene2 = innovations2[gene1.innovation]
+		if gene2 != null and math.random(2) == 1 and gene2.enabled then
 			table.insert(child.genes, copyGene(gene2))
 		else
 			table.insert(child.genes, copyGene(gene1))
@@ -583,7 +581,7 @@ function crossover(g1, g2){
 end
 
 function randomNeuron(genes, nonInput)
-	local neurons = {}
+	var neurons = {}
 	if not nonInput then
 		for i=1,Inputs do
 			neurons[i] = true
@@ -601,11 +599,11 @@ function randomNeuron(genes, nonInput)
 		end
 	end
 
-	local count = 0
+	var count = 0
 	for _,_ in pairs(neurons) do
 		count = count + 1
 	end
-	local n = math.random(1, count)
+	var n = math.random(1, count)
 	
 	for k,v in pairs(neurons) do
 		n = n-1
@@ -617,20 +615,20 @@ function randomNeuron(genes, nonInput)
 	return 0
 end
 
-function containsLink(genes, link)
-	for i=1,#genes do
-		local gene = genes[i]
-		if gene.into == link.into and gene.out == link.out then
-			return true
-		end
-	end
-end
+function containsLink(genes, link){
+	for (var i=1; i < genes.length; i++){
+		var gene = genes[i]
+		if (gene.into == link.into && gene.out == link.out){
+			return true;
+		}
+	}
+}
 
 function pointMutate(genome)
-	local step = genome.mutationRates["step"]
+	var step = genome.mutationRates["step"]
 	
 	for i=1,#genome.genes do
-		local gene = genome.genes[i]
+		var gene = genome.genes[i]
 		if math.random() < PerturbChance then
 			gene.weight = gene.weight + math.random() * step*2 - step
 		else
@@ -640,17 +638,17 @@ function pointMutate(genome)
 end
 
 function linkMutate(genome, forceBias)
-	local neuron1 = randomNeuron(genome.genes, false)
-	local neuron2 = randomNeuron(genome.genes, true)
+	var neuron1 = randomNeuron(genome.genes, false)
+	var neuron2 = randomNeuron(genome.genes, true)
 	 
-	local newLink = newGene()
-	if neuron1 <= Inputs and neuron2 <= Inputs then
-		--Both input nodes
+	var newLink = newGene()
+	if (neuron1 <= Inputs && neuron2 <= Inputs){
+		//Both input nodes
 		return
-	end
+	}
 	if neuron2 <= Inputs then
 		-- Swap output and input
-		local temp = neuron1
+		var temp = neuron1
 		neuron1 = neuron2
 		neuron2 = temp
 	end
@@ -677,20 +675,20 @@ function nodeMutate(genome)
 
 	genome.maxneuron = genome.maxneuron + 1
 
-	local gene = genome.genes[math.random(1,#genome.genes)]
+	var gene = genome.genes[math.random(1,#genome.genes)]
 	if not gene.enabled then
 		return
 	end
 	gene.enabled = false
 	
-	local gene1 = copyGene(gene)
+	var gene1 = copyGene(gene)
 	gene1.out = genome.maxneuron
 	gene1.weight = 1.0
 	gene1.innovation = newInnovation()
 	gene1.enabled = true
 	table.insert(genome.genes, gene1)
 	
-	local gene2 = copyGene(gene)
+	var gene2 = copyGene(gene)
 	gene2.into = genome.maxneuron
 	gene2.innovation = newInnovation()
 	gene2.enabled = true
@@ -698,7 +696,7 @@ function nodeMutate(genome)
 end
 
 function enableDisableMutate(genome, enable)
-	local candidates = {}
+	var candidates = {}
 	for _,gene in pairs(genome.genes) do
 		if gene.enabled == not enable then
 			table.insert(candidates, gene)
@@ -709,7 +707,7 @@ function enableDisableMutate(genome, enable)
 		return
 	end
 	
-	local gene = candidates[math.random(1,#candidates)]
+	var gene = candidates[math.random(1,#candidates)]
 	gene.enabled = not gene.enabled
 end
 
@@ -726,7 +724,7 @@ function mutate(genome)
 		pointMutate(genome)
 	end
 	
-	local p = genome.mutationRates["link"]
+	var p = genome.mutationRates["link"]
 	while p > 0 do
 		if math.random() < p then
 			linkMutate(genome, false)
@@ -768,51 +766,51 @@ function mutate(genome)
 end
 
 function disjoint(genes1, genes2)
-	local i1 = {}
+	var i1 = {}
 	for i = 1,#genes1 do
-		local gene = genes1[i]
+		var gene = genes1[i]
 		i1[gene.innovation] = true
 	end
 
-	local i2 = {}
+	var i2 = {}
 	for i = 1,#genes2 do
-		local gene = genes2[i]
+		var gene = genes2[i]
 		i2[gene.innovation] = true
 	end
 	
-	local disjointGenes = 0
+	var disjointGenes = 0
 	for i = 1,#genes1 do
-		local gene = genes1[i]
+		var gene = genes1[i]
 		if not i2[gene.innovation] then
 			disjointGenes = disjointGenes+1
 		end
 	end
 	
 	for i = 1,#genes2 do
-		local gene = genes2[i]
+		var gene = genes2[i]
 		if not i1[gene.innovation] then
 			disjointGenes = disjointGenes+1
 		end
 	end
 	
-	local n = math.max(#genes1, #genes2)
+	var n = math.max(#genes1, #genes2)
 	
 	return disjointGenes / n
 end
 
 function weights(genes1, genes2)
-	local i2 = {}
+	var i2 = {}
 	for i = 1,#genes2 do
-		local gene = genes2[i]
+		var gene = genes2[i]
 		i2[gene.innovation] = gene
 	end
 
-	local sum = 0
-	local coincident = 0
+	var sum = 0
+	var coincident = 0
 	for i = 1,#genes1 do
-		local gene = genes1[i]
-		if i2[gene.innovation] ~= nil then
-			local gene2 = i2[gene.innovation]
+		var gene = genes1[i]
+		if i2[gene.innovation] != null then
+			var gene2 = i2[gene.innovation]
 			sum = sum + math.abs(gene.weight - gene2.weight)
 			coincident = coincident + 1
 		end
@@ -822,15 +820,15 @@ function weights(genes1, genes2)
 end
 	
 function sameSpecies(genome1, genome2)
-	local dd = DeltaDisjoint*disjoint(genome1.genes, genome2.genes)
-	local dw = DeltaWeights*weights(genome1.genes, genome2.genes) 
+	var dd = DeltaDisjoint*disjoint(genome1.genes, genome2.genes)
+	var dw = DeltaWeights*weights(genome1.genes, genome2.genes) 
 	return dd + dw < DeltaThreshold
 end
 
 function rankGlobally()
-	local global = {}
+	var global = {}
 	for s = 1,#pool.species do
-		local species = pool.species[s]
+		var species = pool.species[s]
 		for g = 1,#species.genomes do
 			table.insert(global, species.genomes[g])
 		end
@@ -845,10 +843,10 @@ function rankGlobally()
 end
 
 function calculateAverageFitness(species)
-	local total = 0
+	var total = 0
 	
 	for g=1,#species.genomes do
-		local genome = species.genomes[g]
+		var genome = species.genomes[g]
 		total = total + genome.globalRank
 	end
 	
@@ -856,9 +854,9 @@ function calculateAverageFitness(species)
 end
 
 function totalAverageFitness()
-	local total = 0
+	var total = 0
 	for s = 1,#pool.species do
-		local species = pool.species[s]
+		var species = pool.species[s]
 		total = total + species.averageFitness
 	end
 
@@ -867,13 +865,13 @@ end
 
 function cullSpecies(cutToOne)
 	for s = 1,#pool.species do
-		local species = pool.species[s]
+		var species = pool.species[s]
 		
 		table.sort(species.genomes, function (a,b)
 			return (a.fitness > b.fitness)
 		end)
 		
-		local remaining = math.ceil(#species.genomes/2)
+		var remaining = math.ceil(#species.genomes/2)
 		if cutToOne then
 			remaining = 1
 		end
@@ -884,7 +882,7 @@ function cullSpecies(cutToOne)
 end
 
 function breedChild(species)
-	local child = {}
+	var child = {}
 	if math.random() < CrossoverChance then
 		g1 = species.genomes[math.random(1, #species.genomes)]
 		g2 = species.genomes[math.random(1, #species.genomes)]
@@ -900,10 +898,10 @@ function breedChild(species)
 end
 
 function removeStaleSpecies()
-	local survived = {}
+	var survived = {}
 
 	for s = 1,#pool.species do
-		local species = pool.species[s]
+		var species = pool.species[s]
 		
 		table.sort(species.genomes, function (a,b)
 			return (a.fitness > b.fitness)
@@ -924,11 +922,11 @@ function removeStaleSpecies()
 end
 
 function removeWeakSpecies()
-	local survived = {}
+	var survived = {}
 
-	local sum = totalAverageFitness()
+	var sum = totalAverageFitness()
 	for s = 1,#pool.species do
-		local species = pool.species[s]
+		var species = pool.species[s]
 		breed = math.floor(species.averageFitness / sum * Population)
 		if breed >= 1 then
 			table.insert(survived, species)
@@ -940,9 +938,9 @@ end
 
 
 function addToSpecies(child)
-	local foundSpecies = false
+	var foundSpecies = false
 	for s=1,#pool.species do
-		local species = pool.species[s]
+		var species = pool.species[s]
 		if not foundSpecies and sameSpecies(child, species.genomes[1]) then
 			table.insert(species.genomes, child)
 			foundSpecies = true
@@ -950,7 +948,7 @@ function addToSpecies(child)
 	end
 	
 	if not foundSpecies then
-		local childSpecies = newSpecies()
+		var childSpecies = newSpecies()
 		table.insert(childSpecies.genomes, child)
 		table.insert(pool.species, childSpecies)
 	end
@@ -962,14 +960,14 @@ function newGeneration()
 	removeStaleSpecies()
 	rankGlobally()
 	for s = 1,#pool.species do
-		local species = pool.species[s]
+		var species = pool.species[s]
 		calculateAverageFitness(species)
 	end
 	removeWeakSpecies()
-	local sum = totalAverageFitness()
-	local children = {}
+	var sum = totalAverageFitness()
+	var children = {}
 	for s = 1,#pool.species do
-		local species = pool.species[s]
+		var species = pool.species[s]
 		breed = math.floor(species.averageFitness / sum * Population) - 1
 		for i=1,breed do
 			table.insert(children, breedChild(species))
@@ -977,11 +975,11 @@ function newGeneration()
 	end
 	cullSpecies(true) -- Cull all but the top member of each species
 	while #children + #pool.species < Population do
-		local species = pool.species[math.random(1, #pool.species)]
+		var species = pool.species[math.random(1, #pool.species)]
 		table.insert(children, breedChild(species))
 	end
 	for c=1,#children do
-		local child = children[c]
+		var child = children[c]
 		addToSpecies(child)
 	end
 	
@@ -1016,15 +1014,15 @@ function initializeRun()
 	timeout = TimeoutConstant
 	clearJoypad()
 	
-	local species = pool.species[pool.currentSpecies]
-	local genome = species.genomes[pool.currentGenome]
+	var species = pool.species[pool.currentSpecies]
+	var genome = species.genomes[pool.currentGenome]
 	generateNetwork(genome)
 	evaluateCurrent()
 end
 
 function evaluateCurrent()
-	local species = pool.species[pool.currentSpecies]
-	local genome = species.genomes[pool.currentGenome]
+	var species = pool.species[pool.currentSpecies]
+	var genome = species.genomes[pool.currentGenome]
 
 	inputs = getInputs()
 	controller = evaluateNetwork(genome.network, inputs)
@@ -1041,7 +1039,7 @@ function evaluateCurrent()
 	joypad.set(controller)
 end
 
-if pool == nil then
+if pool == null then
 	initializePool()
 end
 
@@ -1059,17 +1057,17 @@ function nextGenome()
 end
 
 function fitnessAlreadyMeasured()
-	local species = pool.species[pool.currentSpecies]
-	local genome = species.genomes[pool.currentGenome]
+	var species = pool.species[pool.currentSpecies]
+	var genome = species.genomes[pool.currentGenome]
 	
-	return genome.fitness ~= 0
+	return genome.fitness != 0
 end
 
 function displayGenome(genome)
-	local network = genome.network
-	local cells = {}
-	local i = 1
-	local cell = {}
+	var network = genome.network
+	var cells = {}
+	var i = 1
+	var cell = {}
 	for dy=-BoxRadius,BoxRadius do
 		for dx=-BoxRadius,BoxRadius do
 			cell = {}
@@ -1080,7 +1078,7 @@ function displayGenome(genome)
 			i = i + 1
 		end
 	end
-	local biasCell = {}
+	var biasCell = {}
 	biasCell.x = 80
 	biasCell.y = 110
 	biasCell.value = network.neurons[Inputs].value
@@ -1092,7 +1090,7 @@ function displayGenome(genome)
 		cell.y = 30 + 8 * o
 		cell.value = network.neurons[MaxNodes + o].value
 		cells[MaxNodes+o] = cell
-		local color
+		var color
 		if cell.value > 0 then
 			color = 0xFF0000FF
 		else
@@ -1114,8 +1112,8 @@ function displayGenome(genome)
 	for n=1,4 do
 		for _,gene in pairs(genome.genes) do
 			if gene.enabled then
-				local c1 = cells[gene.into]
-				local c2 = cells[gene.out]
+				var c1 = cells[gene.into]
+				var c2 = cells[gene.out]
 				if gene.into > Inputs and gene.into <= MaxNodes then
 					c1.x = 0.75*c1.x + 0.25*c2.x
 					if c1.x >= c2.x then
@@ -1150,11 +1148,11 @@ function displayGenome(genome)
 	
 	gui.drawBox(50-BoxRadius*5-3,70-BoxRadius*5-3,50+BoxRadius*5+2,70+BoxRadius*5+2,0xFF000000, 0x80808080)
 	for n,cell in pairs(cells) do
-		if n > Inputs or cell.value ~= 0 then
-			local color = math.floor((cell.value+1)/2*256)
+		if n > Inputs or cell.value != 0 then
+			var color = math.floor((cell.value+1)/2*256)
 			if color > 255 then color = 255 end
 			if color < 0 then color = 0 end
-			local opacity = 0xFF000000
+			var opacity = 0xFF000000
 			if cell.value == 0 then
 				opacity = 0x50000000
 			end
@@ -1164,14 +1162,14 @@ function displayGenome(genome)
 	end
 	for _,gene in pairs(genome.genes) do
 		if gene.enabled then
-			local c1 = cells[gene.into]
-			local c2 = cells[gene.out]
-			local opacity = 0xA0000000
+			var c1 = cells[gene.into]
+			var c2 = cells[gene.out]
+			var opacity = 0xA0000000
 			if c1.value == 0 then
 				opacity = 0x20000000
 			end
 			
-			local color = 0x80-math.floor(math.abs(sigmoid(gene.weight))*0x80)
+			var color = 0x80-math.floor(math.abs(sigmoid(gene.weight))*0x80)
 			if gene.weight > 0 then 
 				color = opacity + 0x8000 + 0x10000*color
 			else
@@ -1184,7 +1182,7 @@ function displayGenome(genome)
 	gui.drawBox(49,71,51,78,0x00000000,0x80FF0000)
 	
 	if forms.ischecked(showMutationRates) then
-		local pos = 100
+		var pos = 100
 		for mutation,rate in pairs(genome.mutationRates) do
 			gui.drawText(100, pos, mutation .. ": " .. rate, 0xFF000000, 10)
 			pos = pos + 8
@@ -1193,7 +1191,7 @@ function displayGenome(genome)
 end
 
 function writeFile(filename)
-        local file = io.open(filename, "w")
+        var file = io.open(filename, "w")
 	file:write(pool.generation .. "\n")
 	file:write(pool.maxFitness .. "\n")
 	file:write(#pool.species .. "\n")
@@ -1228,38 +1226,38 @@ function writeFile(filename)
 end
 
 function savePool()
-	local filename = forms.gettext(saveLoadFile)
+	var filename = forms.gettext(saveLoadFile)
 	writeFile(filename)
 end
 
 function loadFile(filename)
-        local file = io.open(filename, "r")
+        var file = io.open(filename, "r")
 	pool = newPool()
 	pool.generation = file:read("*number")
 	pool.maxFitness = file:read("*number")
 	forms.settext(maxFitnessLabel, "Max Fitness: " .. math.floor(pool.maxFitness))
-        local numSpecies = file:read("*number")
+        var numSpecies = file:read("*number")
         for s=1,numSpecies do
-		local species = newSpecies()
+		var species = newSpecies()
 		table.insert(pool.species, species)
 		species.topFitness = file:read("*number")
 		species.staleness = file:read("*number")
-		local numGenomes = file:read("*number")
+		var numGenomes = file:read("*number")
 		for g=1,numGenomes do
-			local genome = newGenome()
+			var genome = newGenome()
 			table.insert(species.genomes, genome)
 			genome.fitness = file:read("*number")
 			genome.maxneuron = file:read("*number")
-			local line = file:read("*line")
-			while line ~= "done" do
+			var line = file:read("*line")
+			while line != "done" do
 				genome.mutationRates[line] = file:read("*number")
 				line = file:read("*line")
 			end
-			local numGenes = file:read("*number")
+			var numGenes = file:read("*number")
 			for n=1,numGenes do
-				local gene = newGene()
+				var gene = newGene()
 				table.insert(genome.genes, gene)
-				local enabled
+				var enabled
 				gene.into, gene.out, gene.weight, gene.innovation, enabled = file:read("*number", "*number", "*number", "*number", "*number")
 				if enabled == 0 then
 					gene.enabled = false
@@ -1280,13 +1278,13 @@ function loadFile(filename)
 end
  
 function loadPool()
-	local filename = forms.gettext(saveLoadFile)
+	var filename = forms.gettext(saveLoadFile)
 	loadFile(filename)
 end
 
 function playTop()
-	local maxfitness = 0
-	local maxs, maxg
+	var maxfitness = 0
+	var maxs, maxg
 	for s,species in pairs(pool.species) do
 		for g,genome in pairs(species.genomes) do
 			if genome.fitness > maxfitness then
@@ -1321,20 +1319,20 @@ showMutationRates = forms.checkbox(form, "Show M-Rates", 5, 52)
 restartButton = forms.button(form, "Restart", initializePool, 5, 77)
 saveButton = forms.button(form, "Save", savePool, 5, 102)
 loadButton = forms.button(form, "Load", loadPool, 80, 102)
-saveLoadFile = forms.textbox(form, Filename .. ".pool", 170, 25, nil, 5, 148)
+saveLoadFile = forms.textbox(form, Filename .. ".pool", 170, 25, null, 5, 148)
 saveLoadLabel = forms.label(form, "Save/Load:", 5, 129)
 playTopButton = forms.button(form, "Play Top", playTop, 5, 170)
 hideBanner = forms.checkbox(form, "Hide Banner", 5, 190)
 
 
 while true do
-	local backgroundColor = 0xD0FFFFFF
+	var backgroundColor = 0xD0FFFFFF
 	if not forms.ischecked(hideBanner) then
 		gui.drawBox(0, 0, 300, 26, backgroundColor, backgroundColor)
 	end
 
-	local species = pool.species[pool.currentSpecies]
-	local genome = species.genomes[pool.currentGenome]
+	var species = pool.species[pool.currentSpecies]
+	var genome = species.genomes[pool.currentGenome]
 	
 	if forms.ischecked(showNetwork) then
 		displayGenome(genome)
@@ -1355,9 +1353,9 @@ while true do
 	timeout = timeout - 1
 	
 	
-	local timeoutBonus = pool.currentFrame / 4
+	var timeoutBonus = pool.currentFrame / 4
 	if timeout + timeoutBonus <= 0 then
-		local fitness = rightmost - pool.currentFrame / 2
+		var fitness = rightmost - pool.currentFrame / 2
 		if gameinfo.getromname() == "Super Mario World (USA)" and rightmost > 4816 then
 			fitness = fitness + 1000
 		end
@@ -1384,12 +1382,12 @@ while true do
 		initializeRun()
 	end
 
-	local measured = 0
-	local total = 0
+	var measured = 0
+	var total = 0
 	for _,species in pairs(pool.species) do
 		for _,genome in pairs(species.genomes) do
 			total = total + 1
-			if genome.fitness ~= 0 then
+			if genome.fitness != 0 then
 				measured = measured + 1
 			end
 		end
