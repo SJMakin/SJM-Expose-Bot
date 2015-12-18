@@ -376,7 +376,7 @@ function newInnovation(){
 
 function newPool() {
     var pool = {}
-	pool.species = {}
+	pool.species = []
 	pool.generation = 0
 	pool.innovation = Outputs
 	pool.currentSpecies = 1
@@ -391,7 +391,7 @@ function newSpecies() {
 	var species = {}
 	species.topFitness = 0
 	species.staleness = 0
-	species.genomes = {}
+	species.genomes = []
 	species.averageFitness = 0
 	
 	return species    
@@ -405,7 +405,7 @@ function newGenome() {
 	genome.network = []
 	genome.maxneuron = 0
 	genome.globalRank = 0
-	genome.mutationRates = {}
+	genome.mutationRates = []
 	genome.mutationRates["connections"] = MutateConnectionsChance
 	genome.mutationRates["link"] = LinkMutationChance
 	genome.mutationRates["bias"] = BiasMutationChance
@@ -467,7 +467,7 @@ function copyGene(gene){
 
 function newNeuron(){
     var neuron = {}
-	neuron.incoming = {}
+	neuron.incoming = []
 	neuron.value = 0.0
 	
 	return neuron
@@ -506,16 +506,16 @@ function generateNetwork(genome){
 
 
 function evaluateNetwork(network, inputs){
-    table.insert(inputs, 1)
+    inputs.push(1)
 	if (inputs.length != Inputs){
 		console.writeline("Incorrect number of neural network inputs.")
 		return {}
 	}
 		
-	for i=1,Inputs do
+	for (var i = 1; i < Inputs; i++){
 		network.neurons[i].value = inputs[i]
-	end
-	
+	}
+		
 	for _,neuron in pairs(network.neurons) do
 		var sum = 0
 		for j = 1,#neuron.incoming do
@@ -552,52 +552,54 @@ function crossover(g1, g2){
     
 	var child = newGenome()
 	
-	var innovations2 = {}
+	var innovations2 = []
     
-	for i=1,#g2.genes do
+	for (var i = 0; g2.genes.length; i++){
 		var gene = g2.genes[i]
 		innovations2[gene.innovation] = gene
-	end
+	}
 	
-	for i=1,#g1.genes do
+	for (var i = 0; i < g1.genes.length; i++){
 		var gene1 = g1.genes[i]
 		var gene2 = innovations2[gene1.innovation]
-		if gene2 != null and math.random(2) == 1 and gene2.enabled then
-			table.insert(child.genes, copyGene(gene2))
-		else
-			table.insert(child.genes, copyGene(gene1))
-		end
-	end
+		if (gene2 != null && Math.random(2) == 1 && gene2.enabled){
+			child.genes.push(copyGene(gene2))
+		} else {
+			child.genes.push(copyGene(gene1))
+		}
+	}
+		
+	child.maxneuron = Math.max(g1.maxneuron,g2.maxneuron)
 	
-	child.maxneuron = math.max(g1.maxneuron,g2.maxneuron)
-	
-	for mutation,rate in pairs(g1.mutationRates) do
-		child.mutationRates[mutation] = rate
-	end
+	//Probably wrong - SJM
+	for (rate of g1.mutationRates) {
+		child.mutationRates[mutation] = rate	
+	}
 	
 	return child    
 }
 
-end
 
 function randomNeuron(genes, nonInput)
-	var neurons = {}
-	if not nonInput then
-		for i=1,Inputs do
+	var neurons = []
+	if (!nonInput) {
+		for (var i = 0;i < Inputs; i++){
 			neurons[i] = true
-		end
-	end
-	for o=1,Outputs do
+		}
+	}
+	
+	for (var o = 1;o < Outputs; o++) {
 		neurons[MaxNodes+o] = true
-	end
-	for i=1,#genes do
-		if (not nonInput) or genes[i].into > Inputs then
+	}
+	
+	for (var i = 1; i < genes.length; i++){ 
+		if ((!nonInput) || genes[i].into > Inputs){
 			neurons[genes[i].into] = true
-		end
-		if (not nonInput) or genes[i].out > Inputs then
+		}
+		if ((!nonInput) || genes[i].out > Inputs){
 			neurons[genes[i].out] = true
-		end
-	end
+		}
+	}
 
 	var count = 0
 	for _,_ in pairs(neurons) do
@@ -624,20 +626,20 @@ function containsLink(genes, link){
 	}
 }
 
-function pointMutate(genome)
+function pointMutate(genome){
 	var step = genome.mutationRates["step"]
 	
-	for i=1,#genome.genes do
+	for (var i = 0;i < genome.genes.length; i++){
 		var gene = genome.genes[i]
-		if math.random() < PerturbChance then
+		if (Math.random() < PerturbChance){
 			gene.weight = gene.weight + math.random() * step*2 - step
-		else
+		} else{
 			gene.weight = math.random()*4-2
-		end
-	end
-end
+		}
+	}		
+}
 
-function linkMutate(genome, forceBias)
+function linkMutate(genome, forceBias){
 	var neuron1 = randomNeuron(genome.genes, false)
 	var neuron2 = randomNeuron(genome.genes, true)
 	 
@@ -646,39 +648,42 @@ function linkMutate(genome, forceBias)
 		//Both input nodes
 		return
 	}
-	if neuron2 <= Inputs then
-		-- Swap output and input
+	if (neuron2 <= Inputs){
+		// Swap output and input
 		var temp = neuron1
 		neuron1 = neuron2
 		neuron2 = temp
-	end
+	}
 
 	newLink.into = neuron1
 	newLink.out = neuron2
-	if forceBias then
+	if (forceBias){
 		newLink.into = Inputs
-	end
+	}
 	
-	if containsLink(genome.genes, newLink) then
+	if (containsLink(genome.genes, newLink)){
 		return
-	end
+	}
+	
 	newLink.innovation = newInnovation()
 	newLink.weight = math.random()*4-2
 	
 	table.insert(genome.genes, newLink)
-end
+}
 
-function nodeMutate(genome)
-	if #genome.genes == 0 then
+function nodeMutate(genome){
+	if (genome.genes.length == 0){
 		return
-	end
+	}
 
 	genome.maxneuron = genome.maxneuron + 1
 
-	var gene = genome.genes[math.random(1,#genome.genes)]
-	if not gene.enabled then
+	var gene = genome.genes[math.random(1,genome.genes.length)]
+	
+	if (!gene.enabled ){
 		return
-	end
+	}
+	
 	gene.enabled = false
 	
 	var gene1 = copyGene(gene)
@@ -686,19 +691,19 @@ function nodeMutate(genome)
 	gene1.weight = 1.0
 	gene1.innovation = newInnovation()
 	gene1.enabled = true
-	table.insert(genome.genes, gene1)
+	genome.genes.push(gene1)
 	
 	var gene2 = copyGene(gene)
 	gene2.into = genome.maxneuron
 	gene2.innovation = newInnovation()
 	gene2.enabled = true
-	table.insert(genome.genes, gene2)
-end
+	genome.genes.push(gene2)
+}
 
 function enableDisableMutate(genome, enable)
 	var candidates = {}
 	for _,gene in pairs(genome.genes) do
-		if gene.enabled == not enable then
+		if gene.enabled == !enable then
 			table.insert(candidates, gene)
 		end
 	end
@@ -708,7 +713,7 @@ function enableDisableMutate(genome, enable)
 	end
 	
 	var gene = candidates[math.random(1,#candidates)]
-	gene.enabled = not gene.enabled
+	gene.enabled = !gene.enabled
 end
 
 function mutate(genome)
@@ -781,14 +786,14 @@ function disjoint(genes1, genes2)
 	var disjointGenes = 0
 	for i = 1,#genes1 do
 		var gene = genes1[i]
-		if not i2[gene.innovation] then
+		if !i2[gene.innovation] then
 			disjointGenes = disjointGenes+1
 		end
 	end
 	
 	for i = 1,#genes2 do
 		var gene = genes2[i]
-		if not i1[gene.innovation] then
+		if !i1[gene.innovation] then
 			disjointGenes = disjointGenes+1
 		end
 	end
@@ -819,11 +824,11 @@ function weights(genes1, genes2)
 	return sum / coincident
 end
 	
-function sameSpecies(genome1, genome2)
+function sameSpecies(genome1, genome2){
 	var dd = DeltaDisjoint*disjoint(genome1.genes, genome2.genes)
 	var dw = DeltaWeights*weights(genome1.genes, genome2.genes) 
 	return dd + dw < DeltaThreshold
-end
+}
 
 function rankGlobally()
 	var global = {}
@@ -941,13 +946,13 @@ function addToSpecies(child)
 	var foundSpecies = false
 	for s=1,#pool.species do
 		var species = pool.species[s]
-		if not foundSpecies and sameSpecies(child, species.genomes[1]) then
+		if !foundSpecies && sameSpecies(child, species.genomes[1]) then
 			table.insert(species.genomes, child)
 			foundSpecies = true
 		end
 	end
 	
-	if not foundSpecies then
+	if !foundSpecies then
 		var childSpecies = newSpecies()
 		table.insert(childSpecies.genomes, child)
 		table.insert(pool.species, childSpecies)
@@ -955,7 +960,7 @@ function addToSpecies(child)
 end
 
 function newGeneration()
-	cullSpecies(false) -- Cull the bottom half of each species
+	cullSpecies(false) //Cull the bottom half of each species
 	rankGlobally()
 	removeStaleSpecies()
 	rankGlobally()
@@ -973,7 +978,7 @@ function newGeneration()
 			table.insert(children, breedChild(species))
 		end
 	end
-	cullSpecies(true) -- Cull all but the top member of each species
+	cullSpecies(true) //Cull all but the top member of each species
 	while #children + #pool.species < Population do
 		var species = pool.species[math.random(1, #pool.species)]
 		table.insert(children, breedChild(species))
@@ -1027,11 +1032,11 @@ function evaluateCurrent()
 	inputs = getInputs()
 	controller = evaluateNetwork(genome.network, inputs)
 	
-	if controller["P1 Left"] and controller["P1 Right"] then
+	if controller["P1 Left"] && controller["P1 Right"] then
 		controller["P1 Left"] = false
 		controller["P1 Right"] = false
 	end
-	if controller["P1 Up"] and controller["P1 Down"] then
+	if controller["P1 Up"] && controller["P1 Down"] then
 		controller["P1 Up"] = false
 		controller["P1 Down"] = false
 	end
@@ -1062,343 +1067,343 @@ function fitnessAlreadyMeasured()
 	
 	return genome.fitness != 0
 end
-
-function displayGenome(genome)
-	var network = genome.network
-	var cells = {}
-	var i = 1
-	var cell = {}
-	for dy=-BoxRadius,BoxRadius do
-		for dx=-BoxRadius,BoxRadius do
-			cell = {}
-			cell.x = 50+5*dx
-			cell.y = 70+5*dy
-			cell.value = network.neurons[i].value
-			cells[i] = cell
-			i = i + 1
-		end
-	end
-	var biasCell = {}
-	biasCell.x = 80
-	biasCell.y = 110
-	biasCell.value = network.neurons[Inputs].value
-	cells[Inputs] = biasCell
-	
-	for o = 1,Outputs do
-		cell = {}
-		cell.x = 220
-		cell.y = 30 + 8 * o
-		cell.value = network.neurons[MaxNodes + o].value
-		cells[MaxNodes+o] = cell
-		var color
-		if cell.value > 0 then
-			color = 0xFF0000FF
-		else
-			color = 0xFF000000
-		end
-		gui.drawText(223, 24+8*o, ButtonNames[o], color, 9)
-	end
-	
-	for n,neuron in pairs(network.neurons) do
-		cell = {}
-		if n > Inputs and n <= MaxNodes then
-			cell.x = 140
-			cell.y = 40
-			cell.value = neuron.value
-			cells[n] = cell
-		end
-	end
-	
-	for n=1,4 do
-		for _,gene in pairs(genome.genes) do
-			if gene.enabled then
-				var c1 = cells[gene.into]
-				var c2 = cells[gene.out]
-				if gene.into > Inputs and gene.into <= MaxNodes then
-					c1.x = 0.75*c1.x + 0.25*c2.x
-					if c1.x >= c2.x then
-						c1.x = c1.x - 40
-					end
-					if c1.x < 90 then
-						c1.x = 90
-					end
-					
-					if c1.x > 220 then
-						c1.x = 220
-					end
-					c1.y = 0.75*c1.y + 0.25*c2.y
-					
-				end
-				if gene.out > Inputs and gene.out <= MaxNodes then
-					c2.x = 0.25*c1.x + 0.75*c2.x
-					if c1.x >= c2.x then
-						c2.x = c2.x + 40
-					end
-					if c2.x < 90 then
-						c2.x = 90
-					end
-					if c2.x > 220 then
-						c2.x = 220
-					end
-					c2.y = 0.25*c1.y + 0.75*c2.y
-				end
-			end
-		end
-	end
-	
-	gui.drawBox(50-BoxRadius*5-3,70-BoxRadius*5-3,50+BoxRadius*5+2,70+BoxRadius*5+2,0xFF000000, 0x80808080)
-	for n,cell in pairs(cells) do
-		if n > Inputs or cell.value != 0 then
-			var color = math.floor((cell.value+1)/2*256)
-			if color > 255 then color = 255 end
-			if color < 0 then color = 0 end
-			var opacity = 0xFF000000
-			if cell.value == 0 then
-				opacity = 0x50000000
-			end
-			color = opacity + color*0x10000 + color*0x100 + color
-			gui.drawBox(cell.x-2,cell.y-2,cell.x+2,cell.y+2,opacity,color)
-		end
-	end
-	for _,gene in pairs(genome.genes) do
-		if gene.enabled then
-			var c1 = cells[gene.into]
-			var c2 = cells[gene.out]
-			var opacity = 0xA0000000
-			if c1.value == 0 then
-				opacity = 0x20000000
-			end
-			
-			var color = 0x80-math.floor(math.abs(sigmoid(gene.weight))*0x80)
-			if gene.weight > 0 then 
-				color = opacity + 0x8000 + 0x10000*color
-			else
-				color = opacity + 0x800000 + 0x100*color
-			end
-			gui.drawLine(c1.x+1, c1.y, c2.x-3, c2.y, color)
-		end
-	end
-	
-	gui.drawBox(49,71,51,78,0x00000000,0x80FF0000)
-	
-	if forms.ischecked(showMutationRates) then
-		var pos = 100
-		for mutation,rate in pairs(genome.mutationRates) do
-			gui.drawText(100, pos, mutation .. ": " .. rate, 0xFF000000, 10)
-			pos = pos + 8
-		end
-	end
-end
-
-function writeFile(filename)
-        var file = io.open(filename, "w")
-	file:write(pool.generation .. "\n")
-	file:write(pool.maxFitness .. "\n")
-	file:write(#pool.species .. "\n")
-        for n,species in pairs(pool.species) do
-		file:write(species.topFitness .. "\n")
-		file:write(species.staleness .. "\n")
-		file:write(#species.genomes .. "\n")
-		for m,genome in pairs(species.genomes) do
-			file:write(genome.fitness .. "\n")
-			file:write(genome.maxneuron .. "\n")
-			for mutation,rate in pairs(genome.mutationRates) do
-				file:write(mutation .. "\n")
-				file:write(rate .. "\n")
-			end
-			file:write("done\n")
-			
-			file:write(#genome.genes .. "\n")
-			for l,gene in pairs(genome.genes) do
-				file:write(gene.into .. " ")
-				file:write(gene.out .. " ")
-				file:write(gene.weight .. " ")
-				file:write(gene.innovation .. " ")
-				if(gene.enabled) then
-					file:write("1\n")
-				else
-					file:write("0\n")
-				end
-			end
-		end
-        end
-        file:close()
-end
-
-function savePool()
-	var filename = forms.gettext(saveLoadFile)
-	writeFile(filename)
-end
-
-function loadFile(filename)
-        var file = io.open(filename, "r")
-	pool = newPool()
-	pool.generation = file:read("*number")
-	pool.maxFitness = file:read("*number")
-	forms.settext(maxFitnessLabel, "Max Fitness: " .. math.floor(pool.maxFitness))
-        var numSpecies = file:read("*number")
-        for s=1,numSpecies do
-		var species = newSpecies()
-		table.insert(pool.species, species)
-		species.topFitness = file:read("*number")
-		species.staleness = file:read("*number")
-		var numGenomes = file:read("*number")
-		for g=1,numGenomes do
-			var genome = newGenome()
-			table.insert(species.genomes, genome)
-			genome.fitness = file:read("*number")
-			genome.maxneuron = file:read("*number")
-			var line = file:read("*line")
-			while line != "done" do
-				genome.mutationRates[line] = file:read("*number")
-				line = file:read("*line")
-			end
-			var numGenes = file:read("*number")
-			for n=1,numGenes do
-				var gene = newGene()
-				table.insert(genome.genes, gene)
-				var enabled
-				gene.into, gene.out, gene.weight, gene.innovation, enabled = file:read("*number", "*number", "*number", "*number", "*number")
-				if enabled == 0 then
-					gene.enabled = false
-				else
-					gene.enabled = true
-				end
-				
-			end
-		end
-	end
-        file:close()
-	
-	while fitnessAlreadyMeasured() do
-		nextGenome()
-	end
-	initializeRun()
-	pool.currentFrame = pool.currentFrame + 1
-end
- 
-function loadPool()
-	var filename = forms.gettext(saveLoadFile)
-	loadFile(filename)
-end
-
-function playTop()
-	var maxfitness = 0
-	var maxs, maxg
-	for s,species in pairs(pool.species) do
-		for g,genome in pairs(species.genomes) do
-			if genome.fitness > maxfitness then
-				maxfitness = genome.fitness
-				maxs = s
-				maxg = g
-			end
-		end
-	end
-	
-	pool.currentSpecies = maxs
-	pool.currentGenome = maxg
-	pool.maxFitness = maxfitness
-	forms.settext(maxFitnessLabel, "Max Fitness: " .. math.floor(pool.maxFitness))
-	initializeRun()
-	pool.currentFrame = pool.currentFrame + 1
-	return
-end
-
-function onExit()
-	forms.destroy(form)
-end
-
-writeFile("temp.pool")
-
-event.onexit(onExit)
-
-form = forms.newform(200, 260, "Fitness")
-maxFitnessLabel = forms.label(form, "Max Fitness: " .. math.floor(pool.maxFitness), 5, 8)
-showNetwork = forms.checkbox(form, "Show Map", 5, 30)
-showMutationRates = forms.checkbox(form, "Show M-Rates", 5, 52)
-restartButton = forms.button(form, "Restart", initializePool, 5, 77)
-saveButton = forms.button(form, "Save", savePool, 5, 102)
-loadButton = forms.button(form, "Load", loadPool, 80, 102)
-saveLoadFile = forms.textbox(form, Filename .. ".pool", 170, 25, null, 5, 148)
-saveLoadLabel = forms.label(form, "Save/Load:", 5, 129)
-playTopButton = forms.button(form, "Play Top", playTop, 5, 170)
-hideBanner = forms.checkbox(form, "Hide Banner", 5, 190)
-
-
-while true do
-	var backgroundColor = 0xD0FFFFFF
-	if not forms.ischecked(hideBanner) then
-		gui.drawBox(0, 0, 300, 26, backgroundColor, backgroundColor)
-	end
-
-	var species = pool.species[pool.currentSpecies]
-	var genome = species.genomes[pool.currentGenome]
-	
-	if forms.ischecked(showNetwork) then
-		displayGenome(genome)
-	end
-	
-	if pool.currentFrame%5 == 0 then
-		evaluateCurrent()
-	end
-
-	joypad.set(controller)
-
-	getPositions()
-	if marioX > rightmost then
-		rightmost = marioX
-		timeout = TimeoutConstant
-	end
-	
-	timeout = timeout - 1
-	
-	
-	var timeoutBonus = pool.currentFrame / 4
-	if timeout + timeoutBonus <= 0 then
-		var fitness = rightmost - pool.currentFrame / 2
-		if gameinfo.getromname() == "Super Mario World (USA)" and rightmost > 4816 then
-			fitness = fitness + 1000
-		end
-		if gameinfo.getromname() == "Super Mario Bros." and rightmost > 3186 then
-			fitness = fitness + 1000
-		end
-		if fitness == 0 then
-			fitness = -1
-		end
-		genome.fitness = fitness
-		
-		if fitness > pool.maxFitness then
-			pool.maxFitness = fitness
-			forms.settext(maxFitnessLabel, "Max Fitness: " .. math.floor(pool.maxFitness))
-			writeFile("backup." .. pool.generation .. "." .. forms.gettext(saveLoadFile))
-		end
-		
-		console.writeline("Gen " .. pool.generation .. " species " .. pool.currentSpecies .. " genome " .. pool.currentGenome .. " fitness: " .. fitness)
-		pool.currentSpecies = 1
-		pool.currentGenome = 1
-		while fitnessAlreadyMeasured() do
-			nextGenome()
-		end
-		initializeRun()
-	end
-
-	var measured = 0
-	var total = 0
-	for _,species in pairs(pool.species) do
-		for _,genome in pairs(species.genomes) do
-			total = total + 1
-			if genome.fitness != 0 then
-				measured = measured + 1
-			end
-		end
-	end
-	if not forms.ischecked(hideBanner) then
-		gui.drawText(0, 0, "Gen " .. pool.generation .. " species " .. pool.currentSpecies .. " genome " .. pool.currentGenome .. " (" .. math.floor(measured/total*100) .. "%)", 0xFF000000, 11)
-		gui.drawText(0, 12, "Fitness: " .. math.floor(rightmost - (pool.currentFrame) / 2 - (timeout + timeoutBonus)*2/3), 0xFF000000, 11)
-		gui.drawText(100, 12, "Max Fitness: " .. math.floor(pool.maxFitness), 0xFF000000, 11)
-	end
-		
-	pool.currentFrame = pool.currentFrame + 1
-
-	emu.frameadvance();
-end
+// 
+// function displayGenome(genome)
+// 	var network = genome.network
+// 	var cells = {}
+// 	var i = 1
+// 	var cell = {}
+// 	for dy=-BoxRadius,BoxRadius do
+// 		for dx=-BoxRadius,BoxRadius do
+// 			cell = {}
+// 			cell.x = 50+5*dx
+// 			cell.y = 70+5*dy
+// 			cell.value = network.neurons[i].value
+// 			cells[i] = cell
+// 			i = i + 1
+// 		end
+// 	end
+// 	var biasCell = {}
+// 	biasCell.x = 80
+// 	biasCell.y = 110
+// 	biasCell.value = network.neurons[Inputs].value
+// 	cells[Inputs] = biasCell
+// 	
+// 	for o = 1,Outputs do
+// 		cell = {}
+// 		cell.x = 220
+// 		cell.y = 30 + 8 * o
+// 		cell.value = network.neurons[MaxNodes + o].value
+// 		cells[MaxNodes+o] = cell
+// 		var color
+// 		if cell.value > 0 then
+// 			color = 0xFF0000FF
+// 		else
+// 			color = 0xFF000000
+// 		end
+// 		gui.drawText(223, 24+8*o, ButtonNames[o], color, 9)
+// 	end
+// 	
+// 	for n,neuron in pairs(network.neurons) do
+// 		cell = {}
+// 		if n > Inputs && n <= MaxNodes then
+// 			cell.x = 140
+// 			cell.y = 40
+// 			cell.value = neuron.value
+// 			cells[n] = cell
+// 		end
+// 	end
+// 	
+// 	for n=1,4 do
+// 		for _,gene in pairs(genome.genes) do
+// 			if gene.enabled then
+// 				var c1 = cells[gene.into]
+// 				var c2 = cells[gene.out]
+// 				if gene.into > Inputs && gene.into <= MaxNodes then
+// 					c1.x = 0.75*c1.x + 0.25*c2.x
+// 					if c1.x >= c2.x then
+// 						c1.x = c1.x - 40
+// 					end
+// 					if c1.x < 90 then
+// 						c1.x = 90
+// 					end
+// 					
+// 					if c1.x > 220 then
+// 						c1.x = 220
+// 					end
+// 					c1.y = 0.75*c1.y + 0.25*c2.y
+// 					
+// 				end
+// 				if gene.out > Inputs && gene.out <= MaxNodes then
+// 					c2.x = 0.25*c1.x + 0.75*c2.x
+// 					if c1.x >= c2.x then
+// 						c2.x = c2.x + 40
+// 					end
+// 					if c2.x < 90 then
+// 						c2.x = 90
+// 					end
+// 					if c2.x > 220 then
+// 						c2.x = 220
+// 					end
+// 					c2.y = 0.25*c1.y + 0.75*c2.y
+// 				end
+// 			end
+// 		end
+// 	end
+// 	
+// 	gui.drawBox(50-BoxRadius*5-3,70-BoxRadius*5-3,50+BoxRadius*5+2,70+BoxRadius*5+2,0xFF000000, 0x80808080)
+// 	for n,cell in pairs(cells) do
+// 		if n > Inputs or cell.value != 0 then
+// 			var color = math.floor((cell.value+1)/2*256)
+// 			if color > 255 then color = 255 end
+// 			if color < 0 then color = 0 end
+// 			var opacity = 0xFF000000
+// 			if cell.value == 0 then
+// 				opacity = 0x50000000
+// 			end
+// 			color = opacity + color*0x10000 + color*0x100 + color
+// 			gui.drawBox(cell.x-2,cell.y-2,cell.x+2,cell.y+2,opacity,color)
+// 		end
+// 	end
+// 	for _,gene in pairs(genome.genes) do
+// 		if gene.enabled then
+// 			var c1 = cells[gene.into]
+// 			var c2 = cells[gene.out]
+// 			var opacity = 0xA0000000
+// 			if c1.value == 0 then
+// 				opacity = 0x20000000
+// 			end
+// 			
+// 			var color = 0x80-math.floor(math.abs(sigmoid(gene.weight))*0x80)
+// 			if gene.weight > 0 then 
+// 				color = opacity + 0x8000 + 0x10000*color
+// 			else
+// 				color = opacity + 0x800000 + 0x100*color
+// 			end
+// 			gui.drawLine(c1.x+1, c1.y, c2.x-3, c2.y, color)
+// 		end
+// 	end
+// 	
+// 	gui.drawBox(49,71,51,78,0x00000000,0x80FF0000)
+// 	
+// 	if forms.ischecked(showMutationRates) then
+// 		var pos = 100
+// 		for mutation,rate in pairs(genome.mutationRates) do
+// 			gui.drawText(100, pos, mutation .. ": " .. rate, 0xFF000000, 10)
+// 			pos = pos + 8
+// 		end
+// 	end
+// end
+// 
+// function writeFile(filename)
+//         var file = io.open(filename, "w")
+// 	file:write(pool.generation .. "\n")
+// 	file:write(pool.maxFitness .. "\n")
+// 	file:write(#pool.species .. "\n")
+//         for n,species in pairs(pool.species) do
+// 		file:write(species.topFitness .. "\n")
+// 		file:write(species.staleness .. "\n")
+// 		file:write(#species.genomes .. "\n")
+// 		for m,genome in pairs(species.genomes) do
+// 			file:write(genome.fitness .. "\n")
+// 			file:write(genome.maxneuron .. "\n")
+// 			for mutation,rate in pairs(genome.mutationRates) do
+// 				file:write(mutation .. "\n")
+// 				file:write(rate .. "\n")
+// 			end
+// 			file:write("done\n")
+// 			
+// 			file:write(#genome.genes .. "\n")
+// 			for l,gene in pairs(genome.genes) do
+// 				file:write(gene.into .. " ")
+// 				file:write(gene.out .. " ")
+// 				file:write(gene.weight .. " ")
+// 				file:write(gene.innovation .. " ")
+// 				if(gene.enabled) then
+// 					file:write("1\n")
+// 				else
+// 					file:write("0\n")
+// 				end
+// 			end
+// 		end
+//         end
+//         file:close()
+// end
+// 
+// function savePool()
+// 	var filename = forms.gettext(saveLoadFile)
+// 	writeFile(filename)
+// end
+// 
+// function loadFile(filename)
+//         var file = io.open(filename, "r")
+// 	pool = newPool()
+// 	pool.generation = file:read("*number")
+// 	pool.maxFitness = file:read("*number")
+// 	forms.settext(maxFitnessLabel, "Max Fitness: " .. math.floor(pool.maxFitness))
+//         var numSpecies = file:read("*number")
+//         for s=1,numSpecies do
+// 		var species = newSpecies()
+// 		table.insert(pool.species, species)
+// 		species.topFitness = file:read("*number")
+// 		species.staleness = file:read("*number")
+// 		var numGenomes = file:read("*number")
+// 		for g=1,numGenomes do
+// 			var genome = newGenome()
+// 			table.insert(species.genomes, genome)
+// 			genome.fitness = file:read("*number")
+// 			genome.maxneuron = file:read("*number")
+// 			var line = file:read("*line")
+// 			while line != "done" do
+// 				genome.mutationRates[line] = file:read("*number")
+// 				line = file:read("*line")
+// 			end
+// 			var numGenes = file:read("*number")
+// 			for n=1,numGenes do
+// 				var gene = newGene()
+// 				table.insert(genome.genes, gene)
+// 				var enabled
+// 				gene.into, gene.out, gene.weight, gene.innovation, enabled = file:read("*number", "*number", "*number", "*number", "*number")
+// 				if enabled == 0 then
+// 					gene.enabled = false
+// 				else
+// 					gene.enabled = true
+// 				end
+// 				
+// 			end
+// 		end
+// 	end
+//         file:close()
+// 	
+// 	while fitnessAlreadyMeasured() do
+// 		nextGenome()
+// 	end
+// 	initializeRun()
+// 	pool.currentFrame = pool.currentFrame + 1
+// end
+//  
+// function loadPool()
+// 	var filename = forms.gettext(saveLoadFile)
+// 	loadFile(filename)
+// end
+// 
+// function playTop()
+// 	var maxfitness = 0
+// 	var maxs, maxg
+// 	for s,species in pairs(pool.species) do
+// 		for g,genome in pairs(species.genomes) do
+// 			if genome.fitness > maxfitness then
+// 				maxfitness = genome.fitness
+// 				maxs = s
+// 				maxg = g
+// 			end
+// 		end
+// 	end
+// 	
+// 	pool.currentSpecies = maxs
+// 	pool.currentGenome = maxg
+// 	pool.maxFitness = maxfitness
+// 	forms.settext(maxFitnessLabel, "Max Fitness: " .. math.floor(pool.maxFitness))
+// 	initializeRun()
+// 	pool.currentFrame = pool.currentFrame + 1
+// 	return
+// end
+// 
+// function onExit()
+// 	forms.destroy(form)
+// end
+// 
+// writeFile("temp.pool")
+// 
+// event.onexit(onExit)
+// 
+// form = forms.newform(200, 260, "Fitness")
+// maxFitnessLabel = forms.label(form, "Max Fitness: " .. math.floor(pool.maxFitness), 5, 8)
+// showNetwork = forms.checkbox(form, "Show Map", 5, 30)
+// showMutationRates = forms.checkbox(form, "Show M-Rates", 5, 52)
+// restartButton = forms.button(form, "Restart", initializePool, 5, 77)
+// saveButton = forms.button(form, "Save", savePool, 5, 102)
+// loadButton = forms.button(form, "Load", loadPool, 80, 102)
+// saveLoadFile = forms.textbox(form, Filename .. ".pool", 170, 25, null, 5, 148)
+// saveLoadLabel = forms.label(form, "Save/Load:", 5, 129)
+// playTopButton = forms.button(form, "Play Top", playTop, 5, 170)
+// hideBanner = forms.checkbox(form, "Hide Banner", 5, 190)
+// 
+// 
+// while true do
+// 	var backgroundColor = 0xD0FFFFFF
+// 	if !forms.ischecked(hideBanner) then
+// 		gui.drawBox(0, 0, 300, 26, backgroundColor, backgroundColor)
+// 	end
+// 
+// 	var species = pool.species[pool.currentSpecies]
+// 	var genome = species.genomes[pool.currentGenome]
+// 	
+// 	if forms.ischecked(showNetwork) then
+// 		displayGenome(genome)
+// 	end
+// 	
+// 	if pool.currentFrame%5 == 0 then
+// 		evaluateCurrent()
+// 	end
+// 
+// 	joypad.set(controller)
+// 
+// 	getPositions()
+// 	if marioX > rightmost then
+// 		rightmost = marioX
+// 		timeout = TimeoutConstant
+// 	end
+// 	
+// 	timeout = timeout - 1
+// 	
+// 	
+// 	var timeoutBonus = pool.currentFrame / 4
+// 	if timeout + timeoutBonus <= 0 then
+// 		var fitness = rightmost - pool.currentFrame / 2
+// 		if gameinfo.getromname() == "Super Mario World (USA)" && rightmost > 4816 then
+// 			fitness = fitness + 1000
+// 		end
+// 		if gameinfo.getromname() == "Super Mario Bros." && rightmost > 3186 then
+// 			fitness = fitness + 1000
+// 		end
+// 		if fitness == 0 then
+// 			fitness = -1
+// 		end
+// 		genome.fitness = fitness
+// 		
+// 		if fitness > pool.maxFitness then
+// 			pool.maxFitness = fitness
+// 			forms.settext(maxFitnessLabel, "Max Fitness: " .. math.floor(pool.maxFitness))
+// 			writeFile("backup." .. pool.generation .. "." .. forms.gettext(saveLoadFile))
+// 		end
+// 		
+// 		console.writeline("Gen " .. pool.generation .. " species " .. pool.currentSpecies .. " genome " .. pool.currentGenome .. " fitness: " .. fitness)
+// 		pool.currentSpecies = 1
+// 		pool.currentGenome = 1
+// 		while fitnessAlreadyMeasured() do
+// 			nextGenome()
+// 		end
+// 		initializeRun()
+// 	end
+// 
+// 	var measured = 0
+// 	var total = 0
+// 	for _,species in pairs(pool.species) do
+// 		for _,genome in pairs(species.genomes) do
+// 			total = total + 1
+// 			if genome.fitness != 0 then
+// 				measured = measured + 1
+// 			end
+// 		end
+// 	end
+// 	if !forms.ischecked(hideBanner) then
+// 		gui.drawText(0, 0, "Gen " .. pool.generation .. " species " .. pool.currentSpecies .. " genome " .. pool.currentGenome .. " (" .. math.floor(measured/total*100) .. "%)", 0xFF000000, 11)
+// 		gui.drawText(0, 12, "Fitness: " .. math.floor(rightmost - (pool.currentFrame) / 2 - (timeout + timeoutBonus)*2/3), 0xFF000000, 11)
+// 		gui.drawText(100, 12, "Max Fitness: " .. math.floor(pool.maxFitness), 0xFF000000, 11)
+// 	end
+// 		
+// 	pool.currentFrame = pool.currentFrame + 1
+// 
+// 	emu.frameadvance();
+// end
