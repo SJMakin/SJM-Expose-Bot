@@ -18,6 +18,27 @@ window.agar.hooks.cellSkin = function(cell, old_skin) {
     if (cell.isVirus) return image;
     return null;
 }
+
+var boxRadius = 6;
+
+var nnInput = {[],[]};
+
+window.agar.hooks.afterDraw = function() {
+    var boxSize = boxRadius * 2 + 1;
+    var width = document.getElementById('canvas').width
+    var height = document.getElementById('canvas').height
+    var cellWidth = weight / boxSize;
+    var cellHeight = height / boxSize;
+    for (var a = 0; a < boxWidth; a++){
+        var 
+        for (var b = 0; b < boxWidth; b++){
+            
+        }
+    }
+    return null;
+}
+
+
 console.log('Loaded Virus Image Switch');
 
 //START - Helper methods
