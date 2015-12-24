@@ -9,57 +9,173 @@
 // ==/UserScript==
 
 
-//START - Helper methods
-function compareSize(player1, player2, ratio) {
-        if (player1.size * player1.size * ratio < player2.size * player2.size) {
-            return true;
-        }
-        return false;
-    }
+//Sample code
+image = new Image();
+image.crossOrigin = 'anonymous';
+image.src = 'http://i.imgur.com/V8EOXwT.png';
+window.agar.hooks.cellSkin = function(cell, old_skin) {
+    //if (old_skin) return old_skin;
+    if (cell.isVirus) return image;
+    if (!cell.isVirus) return null;
+    return null;
+}
 
-// function clusterFood(foodList, blobSize) {
-//         var clusters = [];
-//         var addedCluster = false;
-// 
-//         //1: x
-//         //2: y
-//         //3: size or value
-//         //4: Angle, not set here.
-// 
-//         for (var i = 0; i < foodList.length; i++) {
-//             for (var j = 0; j < clusters.length; j++) {
-//                 if (this.computeInexpensiveDistance(foodList[i][0], foodList[i][1], clusters[j][0], clusters[j][1]) < blobSize * 2) {
-//                     clusters[j][0] = (foodList[i][0] + clusters[j][0]) / 2;
-//                     clusters[j][1] = (foodList[i][1] + clusters[j][1]) / 2;
-//                     clusters[j][2] += foodList[i][2];
-//                     addedCluster = true;
-//                     break;
-//                 }
-//             }
-//             if (!addedCluster) {
-//                 clusters.push([foodList[i][0], foodList[i][1], foodList[i][2], 0]);
-//             }
-//             addedCluster = false;
-//         }
-//         return clusters;
-//     };
+window.agar.hooks.cellColor = function(cell, old_color) {
+    //if (old_color) return old_color;
+    if (isMe(cell)) return "#FFFFFF";
+    if (!cell.isVirus) return "#000000";
+    
+    return old_color;
+}
+
+
+var boxRadius = 6;
+
+var transform = {scale:1, x:0, y:0} 
+window.agar.hooks.beforeTransform = (ctx, t1x, t1y, s, t2x, t2y) => { transform = {scale:s, x:t2x*s + t1x, y:t2y*s + t1y} } 
+
+function toWorldCoords(pixelCoords) { 
+    var x = (pixelCoords.x - transform.x) / transform.scale;
+    var y = (pixelCoords.y - transform.y) / transform.scale;
+    //console.log('PC x: ' + pixelCoords.x + ' PC y: ' + pixelCoords.y + ' WC x ' + x + ' WC y ' + y)
+    return [x, y] 
+} 
+    
+function toPixelCoords(worldCoords) { 
+    var x = worldCoords.x*transform.scale + transform.x; 
+    var y = worldCoords.y*transform.scale + transform.y;
+    //console.log('WC x: ' + worldCoords.x + ' WC y: ' + worldCoords.y + ' PC x ' + x + ' PC y ' + y);
+    return [x, y] 
+}
+
+// var nnInput = {[],[]};
+var canvas = document.getElementById('canvas');
+var context = canvas.getContext("2d");
+var padding = 10;
+var gridWidth = canvas.width - padding;
+var gridHeight = canvas.height - padding;
+
+var currentFrame = 0
+
+window.agar.hooks.afterDraw = function() {
+//     currentFrame += 1;
+//     if (currentFrame < 3) {return;} 
+//     else{
+//         
 //     
+    
+    
+    //drawLine(window.agar.dimensions[0],window.agar.dimensions[1],window.agar.dimensions[2],window.agar.dimensions[3]);
+    //drawCircle(window.agar.rawViewport.x, window.agar.rawViewport.y);
+    //drawCircle(player[k].x, player[k].y, player[k].size + this.splitDistance
+    // 
+    //top
+    // drawLine(window.agar.rawViewport.x - (gridWidth / 2) / transform.scale, window.agar.rawViewport.y - (gridHeight / 2) / transform.scale, window.agar.rawViewport.x + (gridWidth / 2) / transform.scale, window.agar.rawViewport.y - (gridHeight / 2) / transform.scale);
+    //bottom
+    // drawLine(window.agar.rawViewport.x - (gridWidth / 2) / transform.scale, window.agar.rawViewport.y + (gridHeight / 2) / transform.scale, window.agar.rawViewport.x + (gridWidth / 2) / transform.scale, window.agar.rawViewport.y + (gridHeight / 2) / transform.scale);
+    //left
+    //drawLine(window.agar.rawViewport.x - (gridWidth / 2) / transform.scale, window.agar.rawViewport.y - (gridHeight / 2) / transform.scale, window.agar.rawViewport.x - (gridWidth / 2) / transform.scale, window.agar.rawViewport.y + (gridHeight / 2) / transform.scale);
+    //right
+    //drawLine(window.agar.rawViewport.x + (gridWidth / 2) / transform.scale, window.agar.rawViewport.y - (gridHeight / 2) / transform.scale, window.agar.rawViewport.x + (gridWidth / 2) / transform.scale, window.agar.rawViewport.y + (gridHeight / 2) / transform.scale);
+// 
+//     var boxSize = boxRadius * 2 + 1;
+// 
+//     var cellWidth = gridWidth / boxSize;
+//     var cellHeight = gridHeight / boxSize;
+//     
+//     var scanInterval = 30;
+//     
+//     var scanCount = 0;
+//     //var inputs = [];
+//     context.fillStyle="#FF0000";
+//     context.font="20px Georgia";
+//     for (var x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale; x <=window.agar.rawViewport.x + (gridWidth / 2) / transform.scale; x += cellWidth / transform.scale) {        
+//         for (var y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale; y <= window.agar.rawViewport.y + (gridHeight / 2) / transform.scale; y += cellHeight / transform.scale) {
+//             var cellThreatLevel = 0.0;
+//             //for each interval within the cell get the color and add it to the total - we need a value between 1 and -1
+//             //positive values are other players and virus, negative is food
+//             //todo: color the cells greyscale accoring to theat level
+//             for (var cellX = x; cellX < x + cellWidth; cellX += scanInterval){
+//                 for (var cellY = y; cellY < y + cellHeight; cellY += scanInterval){
+//                     var pixelData = context.getImageData(cellX * transform.scale + transform.x, cellY * transform.scale + transform.y, 1, 1).data;
+//                     cellThreatLevel += ((pixelData[0] + pixelData[1] + pixelData[2])/765 * -1) + 1;//255; //grey tone
+//                     scanCount += 1;
+//                }  
+//             } 
+//             cellThreatLevel = cellThreatLevel / scanCount; //mean
+//             cellThreatLevel = +cellThreatLevel.toFixed(1)
+//             context.fillText(cellThreatLevel, x, y)
+//             //inputs.push(cellThreatLevel);
+//             cellThreatLevel = 0;
+//             scanCount = 0;
+//         }
+//     }    
+    
+    
+//     for (var x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale; x <=window.agar.rawViewport.x + (gridWidth / 2) / transform.scale; x += cellWidth / transform.scale) {
+//         context.moveTo(x, window.agar.rawViewport.y - (gridHeight / 2) / transform.scale);
+//         context.lineTo(x, window.agar.rawViewport.y + (gridHeight / 2) / transform.scale);
+//     }
+// 
+//     for (var x = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale; x <= window.agar.rawViewport.y + (gridHeight / 2) / transform.scale; x += cellHeight / transform.scale) {
+//         context.moveTo(window.agar.rawViewport.x - (gridWidth / 2) / transform.scale, x);
+//         context.lineTo(window.agar.rawViewport.x + (gridWidth / 2) / transform.scale, x);
+// //     }
+// 
+//     context.strokeStyle = "black";
+//     context.stroke();
+//     
+//     }
+//     currentFrame = 0;
+//     
+    
+    
+    // 
+    // 
+    // for (var a = 0; a < boxWidth; a++){
+    //     var currentBoxWidth = cellWidth * (a + 1);
+    //     for (var b = 0; b < boxWidth; b++){
+    //         var currentBoxHeight = cellHeight * (b + 1);
+    //         for (var key in window.agar.allCells){
+    //             var cell = window.agar.allCells[key];
+    //             if ((cell.x < currentBoxWidth && cell.x > previousBoxWidth) && (cell.y < currentBoxHeight && cell.y > previousBoxHeight)){
+    //                 
+    //             }
+    //         }
+    //         previousBoxHeight = currentBoxHeight;
+    //     }
+    //     previousBoxWidth = currentBoxWidth;
+    // }
+    // return null;
+}
 
-
-function isThreat(blob, cell) {
-        if (!cell.isVirus() && this.compareSize(blob, cell, 1.30)) {
-            return true;
+// 
+// 
+// 
+// function compareSize(player1, player2) {
+//         return 1/(player1 / player2);
+// }
+// 
+// 
+// function computeDistance(x1, y1, x2, y2, s1, s2) {
+//         s1 = s1 || 0;
+//         s2 = s2 || 0;
+//         var xdis = x1 - x2; 
+//         var ydis = y1 - y2;
+//         var distance = Math.sqrt(xdis * xdis + ydis * ydis) - (s1 + s2);
+// 
+//         return distance;
+// }
+// 
+function getPlayerCells(){
+        var playerCells = [];
+        for (var key in window.agar.allCells){
+                var cell = window.agar.allCells[key];
+                if (isMe(cell)){
+                        playerCells.push(playerCells);
+                }                
         }
-        return false;
-    };
-function computeDistance(x1, y1, x2, y2, s1, s2) {
-        s1 = s1 || 0;
-        s2 = s2 || 0;
-        var xdis = x1 - x2; 
-        var ydis = y1 - y2;
-        var distance = Math.sqrt(xdis * xdis + ydis * ydis) - (s1 + s2);
-
-        return distance;
+        return playerCells;
 }
 
 function isMe(cell){
@@ -71,222 +187,112 @@ function isMe(cell){
     return false;
 }
 
-var transform = {scale:1, x:0, y:0} 
-window.agar.hooks.beforeTransform = (ctx, t1x, t1y, s, t2x, t2y) => { transform = {scale:s, x:t2x*s + t1x, y:t2y*s + t1y} } 
 
-function toWorldCoords(pixelCoords) { 
-    var x = (pixelCoords.x - transform.x) / transform.scale;
-    var y = (pixelCoords.y - transform.y) / transform.scale;
-    console.log('PC x: ' + pixelCoords.x + ' PC y: ' + pixelCoords.y + ' WC x ' + x + ' WC y ' + y)
-    return [x, y] 
-} 
-    
-function toPixelCoords(worldCoords) { 
-    var x = worldCoords.x*transform.scale + transform.x; 
-    var y = worldCoords.y*transform.scale + transform.y;
-    console.log('WC x: ' + worldCoords.x + ' WC y: ' + worldCoords.y + ' PC x ' + x + ' PC y ' + y);
-    return [x, y] 
+// 
+// function moveCell(x,y){
+//    document.getElementById('canvas').onmousemove({clientX:x, clientY:y})
+// }
+// 
+
+function drawCircle(x, y){
+      var radius = 70;
+
+      context.beginPath();
+      context.arc(x, y, radius, 0, 2 * Math.PI, false);
+      context.fillStyle = 'green';
+      context.fill();
+      context.lineWidth = 5;
+      context.strokeStyle = '#003300';
+      context.stroke();
 }
-
-function moveCell(x,y){
-   document.getElementById('canvas').onmousemove({clientX:x, clientY:y})
-}
-
 function drawLine(startX, startY, endX, endY){
-      var canvas = document.getElementById("canvas");
-      var context = canvas.getContext('2d');
 
       context.beginPath();
       context.moveTo(startX, startY);
       context.lineTo(endX, endY);
-      context.lineWidth = 4;
+      context.lineWidth = 3;
       context.stroke();
       
       //console.log('Line drawn');
       return true;
 }
-
+// 
 //END - Helper methods 
 
 //START - UI Customisation
 window.agar.minScale = 0.5;
 window.agar.drawGrid = false;
-window.agar.showStartupBg = false;
-//disableRendering
-
-//Sample code
-image = new Image();
-image.crossOrigin = 'anonymous';
-image.src = 'http://i.imgur.com/V8EOXwT.png';
-window.agar.hooks.cellSkin = function(cell, old_skin) {
-    if (old_skin) return old_skin;
-    if (cell.isVirus) return image;
-    return null;
-}
-console.log('Loaded UI');
 //END - UI Customisation
 
 //START - Bot control
 
-function processGameState(){
-    //console.debug("SJMBot processGameState");
-    var food = [];
-    var virus = [];
-    var me = [];
-    var danger = [];
-    var other = [];
-    console.log(window.agar.allCells.length);
-    for (var key in window.agar.allCells){
-        var cell = window.agar.allCells[key];   
-        //console.log(cell.id);
-        if (isMe(cell)){
-            me.push(cell);
-        } else if (cell.size < 15) {
-            food.push(cell);
-        } else if (cell.isVirus){
-            virus.push(cell);           
-        } else {
-            other.push(cell);  
-        }
-        
-    }
-    //console.log(me.length);
-    
-    if (me.length > 0 && food.length > 0){
-        var closest = 99999999;
-        var target = {};
-        for (var z = 0; z < food.length; z++){
-            var dist = computeDistance(me[0].x, me[0].y, food[z].x, food[z].y);
-            if (dist < closest){
-                closest = dist;
-                target = food[z];
-            }
-        }
-        //console.dir(me);
-        //console.dir(food);
-        var position = toPixelCoords(target);
-        moveCell(position[0], position[1]);
-        
-        //var myPosition = toPixelCoords(me[0]);
-        //drawLine (myPosition[0], myPosition[1], position[0], position[1]);
-    }
+//MARIO X - Toolbox
 
+var pool;
+//var $form; // jQuery's
+//var $aigui;
+//var rightmost;
+var timeout;
+
+// from getPositions
+//var marioX;
+//var marioY;
+
+
+
+//MARIOX - Configuration
+// this should probably go on the toolbox, but while we got no sections there...
+console.log('Loaded pre mario crap');
+//-- For SMW, make sure you have a save state named "DP1.state" at the beginning of a level,
+//-- and put a copy in both the Lua folder and the root directory of BizHawk.
+Filename = "mariox.state"
+
+// based mostly on self.nes.keyboard.state1_keys
+ButtonNames = [
+  'UP',
+  'DOWN',
+  'LEFT',
+  'RIGHT',
+  'SPLIT',
+  'SHOOT', // last command is being ignored, right now! :(
+];
+
+BoxRadius = 6;
+InputSize = (BoxRadius*2+1)*(BoxRadius*2+1);
+
+Inputs = InputSize+1;
+Outputs = ButtonNames.length;
+
+Population = 300; // species
+DeltaDisjoint = 2.0;
+DeltaWeights = 0.4;
+DeltaThreshold = 1.0;
+
+StaleSpecies = 15;
+
+MutateConnectionsChance = 0.25;
+PerturbChance = 0.90;
+CrossoverChance = 0.75;
+LinkMutationChance = 2.0;
+NodeMutationChance = 0.50;
+BiasMutationChance = 0.40;
+StepSize = 0.1;
+DisableMutationChance = 0.4;
+EnableMutationChance = 0.2;
+
+TimeoutConstant = 20;
+
+MaxNodes = 1000000;
+
+
+
+//MARIOX - Functions
+
+function isEmpty (foo) {
+  return (foo == null); // should work for undefined as well
 }
 
-
-setInterval(processGameState, 30);
-//END - Bot control
-console.log("SJMBot loaded");
-
-//Mari/o clone (from https://github.com/basiux/basiux.github.io/tree/master/mariox)
-
-function loadGameStateCallback (filedata) {
-  pool.gameState = filedata;
-}
-
-function loadGameState () {
-  self.nes.cpu.mem = pool.gameState;
-}
-
-function saveGameState () {
-  saveIndexedDB('gameState', self.nes.cpu.mem);
-  loadIndexedDB('gameState', loadGameStateCallback);
-}
-
-function getPositions () {
-          marioX = self.nes.cpu.mem[0x6D]*0x100 + self.nes.cpu.mem[0x86];
-          marioY = self.nes.cpu.mem[0x03B8] + 16;
-}
-
-function getTile (dx, dy) {
-          var x = marioX + dx + 8;
-          var y = marioY + dy - 16;
-          var page = Math.floor(x/256)%2;
-
-          var subx = Math.floor((x%256)/16);
-          var suby = Math.floor((y - 32)/16);
-          var addr = 0x500 + page*13*16+suby*16+subx;
-
-          if (suby >= 13 || suby < 0) {
-                  return 0;
-          }
-
-          if (self.nes.cpu.mem[addr] != 0) {
-                  return 1;
-          } else {
-                  return 0;
-          }
-}
-
-function getSprites () {
-        var sprites = [];
-        for (var slot=0; slot<=4; slot++) {
-                var enemy = self.nes.cpu.mem[0xF+slot];
-                if (enemy != 0) {
-                        var ex = self.nes.cpu.mem[0x6E+slot]*0x100 + self.nes.cpu.mem[0x87+slot];
-                        var ey = self.nes.cpu.mem[0xCF+slot] + 24;
-                        sprites.push( {"x":ex,"y":ey} );
-                }
-        }
-
-        return sprites;
-}
-
-function getInputs () {
-        getPositions();
-
-        var sprites = getSprites();
-
-        var inputs = [];
-
-        for (var dy=-BoxRadius*16; dy<=BoxRadius*16; dy+=16) {
-                for (var dx=-BoxRadius*16; dx<=BoxRadius*16; dx+=16) {
-                        inputs[inputs.length+0] = 0; // array bonds
-
-                        tile = getTile(dx, dy);
-                        if (tile == 1 && marioY+dy < 0x1B0) {
-                                inputs[inputs.length-1] = 1; // array bonds
-                        }
-
-                        for (var i = 0; i<sprites.length; i++) { // array bonds
-                                distx = Math.abs(sprites[i]["x"] - (marioX+dx));
-                                disty = Math.abs(sprites[i]["y"] - (marioY+dy));
-                                if (distx <= 8 && disty <= 8) {
-                                        inputs[inputs.length-1] = -1; // array bonds
-                                }
-                        }
-                }
-        }
-
-        //mariovx = memory.read_s8(0x7B)
-        //mariovy = memory.read_s8(0x7D)
-
-        return inputs;
-}
-
-// figured out a few mario memory things below on google, then thealmightyguru.com
-
-function getTime () {
-  var time = self.nes.cpu.mem[0x7F8] * 100;
-  time += self.nes.cpu.mem[0x7F9] * 10;
-  time += self.nes.cpu.mem[0x7FA];
-  return time;
-}
-
-function getPlayerLives () {
-  return self.nes.cpu.mem[0x75A];
-}
-
-function isPlayerObjPause () {
-  return (self.nes.cpu.mem[0x747] > 0);
-}
-
-function isPlayerPlaying () {
-  return (self.nes.cpu.mem[0x770] == 1);
-}
-
-//end memory functions
-
+// this shall be split into a few more files yet
 
 function sigmoid (x) {
         return 2/(1+Math.exp(-4.9*x))-1;
@@ -909,19 +915,21 @@ function newGeneration () {
 
         pool.generation++;
 
-        writeFile("autobackup.gen." + pool.generation + "." + $form.find('input#saveLoadFile').val());
+        writeFile("autobackup.gen." + pool.generation + "." + "default");//$form.find('input#saveLoadFile').val());
         writeFile("autobackup.pool");
 }
 
 function initializePool () {
+        
         pool = newPool();
 
         for (var i=0; i<Population; i++) {
                 var basic = basicGenome();
                 addToSpecies(basic);
         }
-
+        
         initializeRun();
+        console.log("Loaded!!!");
 }
 
 function clearJoypad () {
@@ -929,13 +937,14 @@ function clearJoypad () {
         for (var b = 0; b<ButtonNames.length; b++) {
                 controller["KEY_" + ButtonNames[b]] = false;
         }
-        joypadSet(controller);
+        //joypadSet(controller);
 }
 
 function initializeRun () {
         // review - something like savestate will be much needed
         //loadState(Filename);
-        rightmost = 0;
+        bestSize = 0;
+        //rightmost = 0;
         pool.currentFrame = 0;
         timeout = TimeoutConstant;
         clearJoypad();
@@ -1002,8 +1011,438 @@ function playTop () {
         pool.currentSpecies = maxSpecies;
         pool.currentGenome = maxGenome;
         pool.maxFitness = maxFitness;
-        $form.find('input#maxFitness').val(Math.floor(pool.maxFitness));
+        //$form.find('input#maxFitness').val(Math.floor(pool.maxFitness));
         initializeRun();
         pool.currentFrame++;
         return;
 }
+
+
+//MARIO X - Files
+
+// indexedDB code all based on https://gist.github.com/BigstickCarpet/a0d6389a5d0e3a24814b
+
+function openIndexedDB () {
+  // This works on all devices/browsers, and uses IndexedDBShim as a final fallback
+  var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+
+  var openDB = indexedDB.open("marioxDB", 1);
+
+  openDB.onupgradeneeded = function() {
+    var db = {}
+    db.result = openDB.result;
+    db.store = db.result.createObjectStore("marioxOBJ", {keyPath: "id"});
+    //db.index = db.store.createIndex("NameIndex", ["name.last", "name.first"]);
+  };
+
+  return openDB;
+}
+
+function getStoreIndexedDB (openDB) {
+  var db = {};
+  db.result = openDB.result;
+  db.tx = db.result.transaction("marioxOBJ", "readwrite");
+  db.store = db.tx.objectStore("marioxOBJ");
+  //db.index = db.store.index("NameIndex");
+
+  return db;
+}
+
+function saveIndexedDB (filename, filedata) {
+  var openDB = openIndexedDB();
+
+  openDB.onsuccess = function() {
+    var db = getStoreIndexedDB(openDB);
+
+    db.store.put({id: filename, data: filedata});
+  }
+}
+
+function loadIndexedDB (filename, callback) {
+  var openDB = openIndexedDB();
+
+  openDB.onsuccess = function() {
+    var db = getStoreIndexedDB(openDB);
+
+    var getData = db.store.get(filename);
+    getData.onsuccess = function() {
+      callback(getData.result.data);
+    };
+
+    db.tx.oncomplete = function() {
+      db.result.close();
+    };
+  }
+}
+
+function writeFile (filename) { // using indexedDB for the win! :)
+        // `poolContent` rather than `pool` for strict lua adaptation
+        var poolContent = {};
+        poolContent.duration = pool.duration;
+        poolContent.generation = pool.generation;
+        poolContent.maxFitness = pool.maxFitness;
+        poolContent.species = pool.species;
+        //poolContent.gameState = pool.gameState;
+        saveIndexedDB(filename, poolContent);
+        pool.state = poolContent;
+        //var fileSize = JSON.stringify(poolContent).length; // couldn't figure out a fast way, just for log
+        //console.log('writing file '+ filename);// +' - pool size: '+ fileSize);
+}
+
+function savePool () {
+        var filename = "default" //$form.find('input#saveLoadFile').val();
+        writeFile(filename);
+}
+
+function grabPoolContent (name) { // leaving commented code to justify function, for now
+  //while (pool.state[name].length > 0) {
+    pool[name] = pool.state[name];//.pop()
+  //}
+}
+function loadFile (filename) {
+        loadIndexedDB(filename, loadFileCallback);
+        //var fileSize = JSON.stringify(poolContent).length; // couldn't figure out a fast way, just for log
+        //console.log('loading '+ filename);// +' - pool size: '+ fileSize);
+}
+function loadFileCallback (poolContent) {
+        if ( poolContent.length == 4 || ( poolContent.length == 5 && isEmpty(poolContent[4]) ) ) {
+          if (poolContent.length == 5) poolContent.pop();
+          pool.species = poolContent.pop();
+          pool.maxFitness = poolContent.pop();
+          pool.generation = poolContent.pop();
+          pool.duration = poolContent.pop();
+        } else {
+          pool.state = poolContent;
+          //grabPoolContent('gameState');
+          grabPoolContent('species');
+          grabPoolContent('maxFitness');
+          grabPoolContent('generation');
+          grabPoolContent('duration');
+          pool.state = [].push(poolContent);
+        }
+        pool.currentSpecies = 0;
+
+        //$form.find('input#maxFitness').val(Math.floor(pool.maxFitness));
+
+        while ( fitnessAlreadyMeasured() ) {
+                nextGenome();
+        }
+        initializeRun();
+        //loadGameState();
+        pool.currentFrame++;
+}
+
+function loadPool () {
+        var filename = "default" //$form.find('input#saveLoadFile').val();
+        loadFile(filename);
+}
+
+function restartPool () {
+  savePool();
+  initializePool();
+}
+
+// MARIO X - Lua
+
+// adapted functions to work like lua script
+
+function mathRandom (min, max) {
+  if ( isEmpty(min) ) {
+    return Math.random();
+  }
+  if ( isEmpty(max) ) {
+    max = min;
+    min = 1;
+  }
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+// 
+// function joypadSet (controller) {
+//   // simulate.keyPress(self.nes.keyboard.state1_keys.KEY_START);
+//   for (var button in controller) {
+//     if (controller[button]) {
+//       //console.log(button +' down');
+//       simulate.keyDown(self.nes.keyboard.state1_keys[button]);
+//     } else {
+//       //console.log(button +' up');
+//       simulate.keyUp(self.nes.keyboard.state1_keys[button]);
+//     }
+//   }
+//   //console.log('joypad.set: '+ JSON.stringify(controller));
+// }
+
+function loadState (stateName) { // review
+  // there is no state saving for now. we will need to build something
+  // at least to get out from menu screen, by pressing start at it.
+  // for now, it can be called just once, or else there's a risk of pause
+  // AND...
+  // it ended up being easier to just let Mario press START after all! :D :)
+  // this is not even being used anymore (for now anyway).
+//   setTimeout(function () {
+// //    simulate.keyPress(self.nes.keyboard.state1_keys.KEY_START);
+//   }, 2100)
+}
+
+//MARIO X - LZ String
+
+// var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length;n++)t[o][o.charAt(n)]=n}return t[o][r]}var r=String.fromCharCode,n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",e="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",t={},i={compressToBase64:function(o){if(null==o)return"";var r=i._compress(o,6,function(o){return n.charAt(o)});switch(r.length%4){default:case 0:return r;case 1:return r+"===";case 2:return r+"==";case 3:return r+"="}},decompressFromBase64:function(r){return null==r?"":""==r?null:i._decompress(r.length,32,function(e){return o(n,r.charAt(e))})},compressToUTF16:function(o){return null==o?"":i._compress(o,15,function(o){return r(o+32)})+" "},decompressFromUTF16:function(o){return null==o?"":""==o?null:i._decompress(o.length,16384,function(r){return o.charCodeAt(r)-32})},compressToUint8Array:function(o){for(var r=i.compress(o),n=new Uint8Array(2*r.length),e=0,t=r.length;t>e;e++){var s=r.charCodeAt(e);n[2*e]=s>>>8,n[2*e+1]=s%256}return n},decompressFromUint8Array:function(o){if(null===o||void 0===o)return i.decompress(o);for(var n=new Array(o.length/2),e=0,t=n.length;t>e;e++)n[e]=256*o[2*e]+o[2*e+1];var s=[];return n.forEach(function(o){s.push(r(o))}),i.decompress(s.join(""))},compressToEncodedURIComponent:function(o){return null==o?"":i._compress(o,6,function(o){return e.charAt(o)})},decompressFromEncodedURIComponent:function(r){return null==r?"":""==r?null:(r=r.replace(/ /g,"+"),i._decompress(r.length,32,function(n){return o(e,r.charAt(n))}))},compress:function(o){return i._compress(o,16,function(o){return r(o)})},_compress:function(o,r,n){if(null==o)return"";var e,t,i,s={},p={},u="",c="",a="",l=2,f=3,h=2,d=[],m=0,v=0;for(i=0;i<o.length;i+=1)if(u=o.charAt(i),Object.prototype.hasOwnProperty.call(s,u)||(s[u]=f++,p[u]=!0),c=a+u,Object.prototype.hasOwnProperty.call(s,c))a=c;else{if(Object.prototype.hasOwnProperty.call(p,a)){if(a.charCodeAt(0)<256){for(e=0;h>e;e++)m<<=1,v==r-1?(v=0,d.push(n(m)),m=0):v++;for(t=a.charCodeAt(0),e=0;8>e;e++)m=m<<1|1&t,v==r-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;h>e;e++)m=m<<1|t,v==r-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=a.charCodeAt(0),e=0;16>e;e++)m=m<<1|1&t,v==r-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}l--,0==l&&(l=Math.pow(2,h),h++),delete p[a]}else for(t=s[a],e=0;h>e;e++)m=m<<1|1&t,v==r-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;l--,0==l&&(l=Math.pow(2,h),h++),s[c]=f++,a=String(u)}if(""!==a){if(Object.prototype.hasOwnProperty.call(p,a)){if(a.charCodeAt(0)<256){for(e=0;h>e;e++)m<<=1,v==r-1?(v=0,d.push(n(m)),m=0):v++;for(t=a.charCodeAt(0),e=0;8>e;e++)m=m<<1|1&t,v==r-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;h>e;e++)m=m<<1|t,v==r-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=a.charCodeAt(0),e=0;16>e;e++)m=m<<1|1&t,v==r-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}l--,0==l&&(l=Math.pow(2,h),h++),delete p[a]}else for(t=s[a],e=0;h>e;e++)m=m<<1|1&t,v==r-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;l--,0==l&&(l=Math.pow(2,h),h++)}for(t=2,e=0;h>e;e++)m=m<<1|1&t,v==r-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;for(;;){if(m<<=1,v==r-1){d.push(n(m));break}v++}return d.join("")},decompress:function(o){return null==o?"":""==o?null:i._decompress(o.length,32768,function(r){return o.charCodeAt(r)})},_decompress:function(o,n,e){var t,i,s,p,u,c,a,l,f=[],h=4,d=4,m=3,v="",w=[],A={val:e(0),position:n,index:1};for(i=0;3>i;i+=1)f[i]=i;for(p=0,c=Math.pow(2,2),a=1;a!=c;)u=A.val&A.position,A.position>>=1,0==A.position&&(A.position=n,A.val=e(A.index++)),p|=(u>0?1:0)*a,a<<=1;switch(t=p){case 0:for(p=0,c=Math.pow(2,8),a=1;a!=c;)u=A.val&A.position,A.position>>=1,0==A.position&&(A.position=n,A.val=e(A.index++)),p|=(u>0?1:0)*a,a<<=1;l=r(p);break;case 1:for(p=0,c=Math.pow(2,16),a=1;a!=c;)u=A.val&A.position,A.position>>=1,0==A.position&&(A.position=n,A.val=e(A.index++)),p|=(u>0?1:0)*a,a<<=1;l=r(p);break;case 2:return""}for(f[3]=l,s=l,w.push(l);;){if(A.index>o)return"";for(p=0,c=Math.pow(2,m),a=1;a!=c;)u=A.val&A.position,A.position>>=1,0==A.position&&(A.position=n,A.val=e(A.index++)),p|=(u>0?1:0)*a,a<<=1;switch(l=p){case 0:for(p=0,c=Math.pow(2,8),a=1;a!=c;)u=A.val&A.position,A.position>>=1,0==A.position&&(A.position=n,A.val=e(A.index++)),p|=(u>0?1:0)*a,a<<=1;f[d++]=r(p),l=d-1,h--;break;case 1:for(p=0,c=Math.pow(2,16),a=1;a!=c;)u=A.val&A.position,A.position>>=1,0==A.position&&(A.position=n,A.val=e(A.index++)),p|=(u>0?1:0)*a,a<<=1;f[d++]=r(p),l=d-1,h--;break;case 2:return w.join("")}if(0==h&&(h=Math.pow(2,m),m++),f[l])v=f[l];else{if(l!==d)return null;v=s+s.charAt(0)}w.push(v),f[d++]=s+v.charAt(0),h--,s=v,0==h&&(h=Math.pow(2,m),m++)}}};return i}();"function"==typeof define&&define.amd?define(function(){return LZString}):"undefined"!=typeof module&&null!=module&&(module.exports=LZString);
+
+
+// MARIO X - Main
+
+if ( isEmpty(pool) ) {
+        initializePool();
+}
+console.log("Loaded!!!");
+//loadIndexedDB('gameState', loadGameStateCallback);
+
+// createAiGUI();
+
+loadFile("autobackup.pool");
+
+// self.nes.stop();
+// self.nes.isRunning = true;
+// self.nes.fpsInterval = setInterval(function() {
+//     self.nes.printFps();
+// }, self.nes.opts.fpsInterval);
+
+// those are currently in the "global" scope, but only being used here
+var fpsinterval = 0;
+var mainLoopInterval = null;
+var markDurationInterval = null;
+
+// // review bug
+// // without this, start button wasn't being activated for some reason
+// var badFixStartBug = setInterval(function(){ // review bad fix
+//   //$('#emulator .nes-pause').click();
+//   //if (self.nes.isRunning) clearInterval(badFixStartBug);
+// }, 100); // wait a bit to start main loop
+
+function startMainLoop () {
+  mainLoopInterval = setInterval(asyncMainLoop, fpsinterval);
+  //markDurationInterval = setInterval(markDuration, 1000);
+}
+
+function markDuration () {
+  pool.duration += 1/3600; // in hours
+  //$aigui.find('#banner #duration').text( Math.round(pool.duration * 10000) / 10000 +' hours' );
+}
+
+// $('#emulator .nes-pause').click(function(){
+//   if (self.nes.isRunning) {
+//     startMainLoop();
+//   } else { // pause
+//     clearInterval(mainLoopInterval);
+//     clearInterval(markDurationInterval);
+//   }
+// });
+
+function manageGameStates () {
+  //var gameClock = getTime();
+  
+  // is it in the ...
+  // ... demo screen?
+  if (!isPlayerPlaying()) {
+//     simulate.keyUp(self.nes.keyboard.state1_keys.KEY_START); // make sure it's released
+//     setTimeout(function () {
+//       simulate.keyPress(self.nes.keyboard.state1_keys.KEY_START);
+//     }, 200);
+        setNick(document.getElementById('nick').value); 
+  }
+
+//   // ... beginning of a new game?
+//   if (isPlayerPlaying() && gameClock < 401 && pool.gameState === null) {
+//     saveGameState();
+//   }
+// 
+//   // ... dead?
+//   if (isPlayerPlaying() && isPlayerObjPause()) {
+//     if (gameClock < 1) {
+//       loadGameState();
+//     }
+//   }
+}
+
+var bestSize = 0
+var aliveCells = [] 
+
+function asyncMainLoop () { // infinite, async equivalent
+        console.log("Started mainloop");
+        var species = pool.species[pool.currentSpecies];
+        var genome = species.genomes[pool.currentGenome];
+
+        // if ($form.find('input#showNetwork')[0].checked) {
+        //         displayGenome(genome);
+        // }
+
+        if (pool.currentFrame%5 == 0) {
+                evaluateCurrent();
+        }
+
+        //joypadSet(controller);
+        moveCell(controller);
+        
+        //getPositions();
+        aliveCells = getPlayerCells();
+        var playerSize = 0;
+        
+        for (i = 0;i<aliveCells.length;i++){
+                playerSize += aliveCells[i].size;
+        }
+        
+        bestSize = Math.max(playerSize, bestSize);
+        
+        // if (marioX > rightmost) {
+        //         rightmost = marioX;
+        //         timeout = TimeoutConstant;
+        // }
+        if (30 > bestSize) {
+                //rightmost = marioX;
+                timeout = TimeoutConstant;
+        }
+
+        timeout = timeout - 1;
+
+
+        var timeoutBonus = pool.currentFrame / 4;
+        if (timeout + timeoutBonus <= 0) {
+                var fitness = bestSize - pool.currentFrame / 3;
+                if (bestSize > 3186) {
+                        fitness = fitness + 1000;
+                }
+                if (fitness == 0) {
+                        fitness = -1;
+                }
+                genome.fitness = fitness;
+
+                if (fitness > pool.maxFitness) {
+                        pool.maxFitness = fitness;
+                        //$form.find('input#maxFitness').val(Math.floor(pool.maxFitness));
+
+                        writeFile( "autobackup.fitness." + fitness + "." + "default" ); //$form.find('input#saveLoadFile').val() );
+                        writeFile("autobackup.pool");
+                }
+
+                //console.log("Gen " + pool.generation + " species " + pool.currentSpecies + " genome " + pool.currentGenome + " fitness: " + fitness);
+                pool.currentSpecies = 0; // array bonds
+                pool.currentGenome = 0; // array bonds
+                while ( fitnessAlreadyMeasured() ) {
+                        nextGenome();
+                }
+                initializeRun();
+        }
+
+        var measured = 0;
+        var total = 0;
+        for (var s in pool.species) { // in pairs
+                var species = pool.species[s];
+                for (var g in species.genomes) { // in pairs
+                        var genome = species.genomes[g];
+                        total++;
+                        if (genome.fitness != 0) {
+                                measured++;
+                        }
+                }
+        }
+
+        //$aigui.find('#banner #gen').text( pool.generation + ' species ' + pool.currentSpecies + ' genome ' + pool.currentGenome + ' (' + Math.floor(measured/total*100) + '%)' );
+        //$aigui.find('#banner #fitness').text( Math.floor(rightmost - (pool.currentFrame) / 2 - (timeout + timeoutBonus)*2/3) );
+        //$aigui.find('#banner #maxFitness').text( Math.floor(pool.maxFitness) );
+
+        pool.currentFrame++;
+
+        manageGameStates();
+
+        //self.nes.frame();
+}
+
+
+
+// AGAR Overrides
+
+function isPlayerPlaying () {
+  return aliveCells.length > 0;
+}
+
+function getTime () {
+  var t = new Date().getTime;
+  return t;
+}
+
+
+function getInputs(){
+    var inputs = [];
+    var boxSize = boxRadius * 2 + 1;
+
+    var cellWidth = gridWidth / boxSize;
+    var cellHeight = gridHeight / boxSize;
+    
+    var scanInterval = 30;
+    
+    var scanCount = 0;
+    //var inputs = [];
+    context.fillStyle="#FF0000";
+    context.font="20px Georgia";
+    for (var x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale; x <=window.agar.rawViewport.x + (gridWidth / 2) / transform.scale; x += cellWidth / transform.scale) {        
+        for (var y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale; y <= window.agar.rawViewport.y + (gridHeight / 2) / transform.scale; y += cellHeight / transform.scale) {
+            var cellThreatLevel = 0.0;
+            //for each interval within the cell get the color and add it to the total - we need a value between 1 and -1
+            //positive values are other players and virus, negative is food
+            //todo: color the cells greyscale accoring to theat level
+            for (var cellX = x; cellX < x + cellWidth; cellX += scanInterval){
+                for (var cellY = y; cellY < y + cellHeight; cellY += scanInterval){
+                    var pixelData = context.getImageData(cellX * transform.scale + transform.x, cellY * transform.scale + transform.y, 1, 1).data;
+                    cellThreatLevel += ((pixelData[0] + pixelData[1] + pixelData[2])/765 * -1) + 1;//255; //grey tone
+                    scanCount += 1;
+               }  
+            } 
+            cellThreatLevel = cellThreatLevel / scanCount; //mean
+            cellThreatLevel = +cellThreatLevel.toFixed(1);
+            //context.fillText(cellThreatLevel, x, y)
+            inputs.push(cellThreatLevel);
+            cellThreatLevel = 0;
+            scanCount = 0;
+        }
+    }
+    return inputs;    
+}
+
+function moveCell(controler){
+    var x = 0;
+    var y = 0;
+    if (controler['KEY_UP'] = 1 && controler['KEY_LEFT']){
+        x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale;
+        y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale;
+    } else if (controler['KEY_UP'] = 1 && controler['KEY_RIGHT']){
+        x = window.agar.rawViewport.x + (gridWidth / 2) / transform.scale;
+        y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale;
+    } else if (controler['KEY_DOWN'] = 1 && controler['KEY_LEFT']){
+        x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale;
+        y = window.agar.rawViewport.y + (gridHeight / 2) / transform.scale;
+    } else if (controler['KEY_DOWN'] = 1 && controler['KEY_RIGHT']){
+        x = window.agar.rawViewport.x + (gridWidth / 2) / transform.scale;
+        y = window.agar.rawViewport.y + (gridHeight / 2) / transform.scale;
+    } else if (controler['KEY_UP'] = 1){
+        x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale;
+        y = window.agar.rawViewport.y / transform.scale;
+    } else if (controler['KEY_DOWN'] = 1){
+        x = window.agar.rawViewport.x + (gridWidth / 2) / transform.scale;
+        y = window.agar.rawViewport.y / transform.scale;
+    } else if (controler['KEY_LEFT'] = 1){
+        x = window.agar.rawViewport.x / transform.scale;
+        y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale;
+    } else if (controler['KEY_RIGHT'] = 1){
+        x = window.agar.rawViewport.x / transform.scale;
+        y = window.agar.rawViewport.y + (gridHeight / 2) / transform.scale;
+    }
+    
+    x = x*transform.scale + transform.x;
+    y = y*transform.scale + transform.y;
+    
+    canvas.onmousemove({clientX:x, clientY:y});
+
+}
+
+console.log("Loaded all code!!");
+//HOOOOOOOOOOOOOOOOOOO
+startMainLoop();
