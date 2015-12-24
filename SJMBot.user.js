@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name        SJMBot
-// @namespace   SJMBot
+// @name        SJMBotInputTester
+// @namespace   SJMBotInputTester
 // @include     http://agar.io/*
 // @include     https://agar.io/*
 // @version     0.01
