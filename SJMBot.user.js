@@ -172,7 +172,7 @@ function getPlayerCells(){
         for (var key in window.agar.allCells){
                 var cell = window.agar.allCells[key];
                 if (isMe(cell)){
-                        playerCells.push(playerCells);
+                        playerCells.push(cell);
                 }                
         }
         return playerCells;
@@ -229,8 +229,8 @@ window.agar.drawGrid = false;
 //MARIO X - Toolbox
 
 var pool;
-//var $form; // jQuery's
-//var $aigui;
+var $form; // jQuery's
+var $aigui;
 //var rightmost;
 var timeout;
 
@@ -242,7 +242,7 @@ var timeout;
 
 //MARIOX - Configuration
 // this should probably go on the toolbox, but while we got no sections there...
-console.log('Loaded pre mario crap');
+//console.log('Loaded pre mario crap');
 //-- For SMW, make sure you have a save state named "DP1.state" at the beginning of a level,
 //-- and put a copy in both the Lua folder and the root directory of BizHawk.
 Filename = "mariox.state"
@@ -929,7 +929,7 @@ function initializePool () {
         }
         
         initializeRun();
-        console.log("Loaded!!!");
+        //console.log("Loaded!!!");
 }
 
 function clearJoypad () {
@@ -1220,12 +1220,12 @@ var markDurationInterval = null;
 
 function startMainLoop () {
   mainLoopInterval = setInterval(asyncMainLoop, fpsinterval);
-  //markDurationInterval = setInterval(markDuration, 1000);
+  markDurationInterval = setInterval(markDuration, 1000);
 }
 
 function markDuration () {
   pool.duration += 1/3600; // in hours
-  //$aigui.find('#banner #duration').text( Math.round(pool.duration * 10000) / 10000 +' hours' );
+  $aigui.find('#banner #duration').text( Math.round(pool.duration * 10000) / 10000 +' hours' );
 }
 
 // $('#emulator .nes-pause').click(function(){
@@ -1236,20 +1236,40 @@ function markDuration () {
 //     clearInterval(markDurationInterval);
 //   }
 // });
-
+var reviving = false;
+var firststart = true;
+var revivetime = getTime();
 function manageGameStates () {
   //var gameClock = getTime();
   
   // is it in the ...
   // ... demo screen?
-  if (!isPlayerPlaying()) {
-//     simulate.keyUp(self.nes.keyboard.state1_keys.KEY_START); // make sure it's released
+  //reviving = false;
+  //     simulate.keyUp(self.nes.keyboard.state1_keys.KEY_START); // make sure it's released
 //     setTimeout(function () {
 //       simulate.keyPress(self.nes.keyboard.state1_keys.KEY_START);
 //     }, 200);
-        setNick(document.getElementById('nick').value); 
-  }
+  
+  if (!isPlayerPlaying() && !reviving) {
 
+
+                //dead or starting
+                if (firststart){
+                       firststart = false;
+                } 
+                //closeStats();                  
+                
+                console.log("Reviving!");
+                reviving = true;
+                revivetime = getTime();
+                setTimeout(function(){ closeStats(); }, 1000);       
+                setTimeout(function(){ setNick("Hello"); }, 2000);       
+  } else if (isPlayerPlaying() && reviving) {
+            reviving = false;
+            console.log("Done Reviving!");
+        }
+
+ //reviving = false;
 //   // ... beginning of a new game?
 //   if (isPlayerPlaying() && gameClock < 401 && pool.gameState === null) {
 //     saveGameState();
@@ -1263,17 +1283,20 @@ function manageGameStates () {
 //   }
 }
 
-var bestSize = 0
-var aliveCells = [] 
-
+var bestSize = 0;
+var aliveCells = [];
+var evaluated = false;
 function asyncMainLoop () { // infinite, async equivalent
-        console.log("Started mainloop");
+        //console.log("Started mainloop");
+     
+
+        
         var species = pool.species[pool.currentSpecies];
         var genome = species.genomes[pool.currentGenome];
 
-        // if ($form.find('input#showNetwork')[0].checked) {
-        //         displayGenome(genome);
-        // }
+         if ($form.find('input#showNetwork')[0].checked) {
+                 displayGenome(genome);
+        }
 
         if (pool.currentFrame%5 == 0) {
                 evaluateCurrent();
@@ -1286,27 +1309,27 @@ function asyncMainLoop () { // infinite, async equivalent
         aliveCells = getPlayerCells();
         var playerSize = 0;
         
-        for (i = 0;i<aliveCells.length;i++){
+        for (var i = 0;i<aliveCells.length;i++){
                 playerSize += aliveCells[i].size;
         }
-        
+        //console.log('Player size: ' + playerSize);
         bestSize = Math.max(playerSize, bestSize);
         
         // if (marioX > rightmost) {
         //         rightmost = marioX;
         //         timeout = TimeoutConstant;
         // }
-        if (30 > bestSize) {
-                //rightmost = marioX;
-                timeout = TimeoutConstant;
-        }
+//         if (30 > bestSize) {
+//                 //rightmost = marioX;
+//                 timeout = TimeoutConstant;
+//         }
+// 
+//         timeout = timeout - 1;
 
-        timeout = timeout - 1;
 
-
-        var timeoutBonus = pool.currentFrame / 4;
-        if (timeout + timeoutBonus <= 0) {
-                var fitness = bestSize - pool.currentFrame / 3;
+        //var timeoutBonus = pool.currentFrame / 4;
+        if (!isPlayerPlaying() && !reviving && !firststart) {
+                var fitness = bestSize //- (pool.currentFrame / 3);
                 if (bestSize > 3186) {
                         fitness = fitness + 1000;
                 }
@@ -1323,7 +1346,7 @@ function asyncMainLoop () { // infinite, async equivalent
                         writeFile("autobackup.pool");
                 }
 
-                //console.log("Gen " + pool.generation + " species " + pool.currentSpecies + " genome " + pool.currentGenome + " fitness: " + fitness);
+                console.log("Gen " + pool.generation + " species " + pool.currentSpecies + " genome " + pool.currentGenome + " fitness: " + fitness);
                 pool.currentSpecies = 0; // array bonds
                 pool.currentGenome = 0; // array bonds
                 while ( fitnessAlreadyMeasured() ) {
@@ -1351,17 +1374,17 @@ function asyncMainLoop () { // infinite, async equivalent
 
         pool.currentFrame++;
 
-        manageGameStates();
-
         //self.nes.frame();
+        manageGameStates();
+        
 }
 
 
 
 // AGAR Overrides
 
-function isPlayerPlaying () {
-  return aliveCells.length > 0;
+function isPlayerPlaying() {
+  return getPlayerCells().length > 0;
 }
 
 function getTime () {
@@ -1383,8 +1406,8 @@ function getInputs(){
     //var inputs = [];
     context.fillStyle="#FF0000";
     context.font="20px Georgia";
-    for (var x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale; x <=window.agar.rawViewport.x + (gridWidth / 2) / transform.scale; x += cellWidth / transform.scale) {        
-        for (var y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale; y <= window.agar.rawViewport.y + (gridHeight / 2) / transform.scale; y += cellHeight / transform.scale) {
+    for (var x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale; x <=window.agar.rawViewport.x + (gridWidth / 2) / transform.scale - 1; x += cellWidth / transform.scale) {        
+        for (var y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale; y <= window.agar.rawViewport.y + (gridHeight / 2) / transform.scale - 1; y += cellHeight / transform.scale) {
             var cellThreatLevel = 0.0;
             //for each interval within the cell get the color and add it to the total - we need a value between 1 and -1
             //positive values are other players and virus, negative is food
@@ -1446,3 +1469,185 @@ function moveCell(controler){
 console.log("Loaded all code!!");
 //HOOOOOOOOOOOOOOOOOOO
 startMainLoop();
+
+//AI GUI
+// 
+// #aigui .data {
+//   color: gray;
+//   padding-right: 1em;
+// }
+
+function displayGenome (genome) { // review - at least the `gui.`
+        var network = genome.network;
+        var cells = [];
+        var i = 0; // array bonds
+        var cell = {};
+        for (var dy=-boxRadius; dy<=boxRadius; dy++) {
+                for (var dx=-boxRadius; dx<=boxRadius; dx++) {
+                        cell = {};
+                        cell.x = 50+5*dx;
+                        cell.y = 70+5*dy;
+                        cell.value = network.neurons[i].value;
+                        cells[i] = cell;
+                        i++;
+                }
+        }
+        var biasCell = {};
+        biasCell.x = 80;
+        biasCell.y = 110;
+        biasCell.value = network.neurons[Inputs-1].value; // array bonds
+        cells[Inputs-1] = biasCell; // array bonds
+
+        for (var o = 0; o<Outputs; o++) {
+                cell = {};
+                cell.x = 220;
+                cell.y = 30 + 8 * o;
+                cell.value = network.neurons[MaxNodes + o].value;
+                cells[MaxNodes+o] = cell;
+                var color;
+                if (cell.value > 0) {
+                        color = 0xFF0000FF;
+                } else {
+                        color = 0xFF000000;
+                }
+                $aigui.find('#show #buttonNames').html( ButtonNames[o] +'<br>' );
+                //gui.drawText(223, 24+8*o, ButtonNames[o], color, 9);
+        }
+
+        for (var n in network.neurons) { // in pairs
+                var neuron = network.neurons[n];
+                cell = {};
+                if (n >= Inputs && n < MaxNodes) { // array bonds
+                        cell.x = 140;
+                        cell.y = 40;
+                        cell.value = neuron.value;
+                        cells[n] = cell;
+                }
+        }
+
+        for (var n=0; n<4; n++) {
+                for (var _ in genome.genes) { // in pairs
+                        var gene = genome.genes[_];
+                        if (gene.enabled) {
+                                var c1 = cells[gene.into];
+                                var c2 = cells[gene.out];
+                                if (gene.into >= Inputs && gene.into < MaxNodes) { // array bonds
+                                        c1.x = 0.75*c1.x + 0.25*c2.x;
+                                        if (c1.x >= c2.x) {
+                                                c1.x = c1.x - 40;
+                                        }
+                                        if (c1.x < 90) {
+                                                c1.x = 90;
+                                        }
+
+                                        if (c1.x > 220) {
+                                                c1.x = 220;
+                                        }
+                                        c1.y = 0.75*c1.y + 0.25*c2.y;
+
+                                }
+                                if (gene.out >= Inputs && gene.out < MaxNodes) { // array bonds
+                                        c2.x = 0.25*c1.x + 0.75*c2.x;
+                                        if (c1.x >= c2.x) {
+                                                c2.x = c2.x + 40;
+                                        }
+                                        if (c2.x < 90) {
+                                                c2.x = 90;
+                                        }
+                                        if (c2.x > 220) {
+                                                c2.x = 220;
+                                        }
+                                        c2.y = 0.25*c1.y + 0.75*c2.y;
+                                }
+                        }
+                }
+        }
+
+        // gui.drawBox(50-BoxRadius*5-3,70-BoxRadius*5-3,50+BoxRadius*5+2,70+BoxRadius*5+2,0xFF000000, 0x80808080);
+        for (var n in cells) { // in pairs
+                var cell = cells[n];
+                if (n >= Inputs || cell.value != 0) { // array bonds
+                        var color = Math.floor((cell.value+1)/2*256);
+                        if (color > 255) { color = 255 };
+                        if (color < 0) { color = 0 };
+                        var opacity = 0xFF000000;
+                        if (cell.value == 0) {
+                                opacity = 0x50000000;
+                        }
+                        color = opacity + color*0x10000 + color*0x100 + color;
+                        // gui.drawBox(cell.x-2,cell.y-2,cell.x+2,cell.y+2,opacity,color);
+                }
+        }
+        for (var _ in genome.genes) { // in pairs
+                var gene = genome.genes[_];
+                if (gene.enabled) {
+                        var c1 = cells[gene.into];
+                        var c2 = cells[gene.out];
+                        var opacity = 0xA0000000;
+                        if (c1.value == 0) {
+                                opacity = 0x20000000;
+                        }
+
+                        var color = 0x80-Math.floor(Math.abs(sigmoid(gene.weight))*0x80);
+                        if (gene.weight > 0) {
+                                color = opacity + 0x8000 + 0x10000*color;
+                        } else {
+                                color = opacity + 0x800000 + 0x100*color;
+                        }
+                        // gui.drawLine(c1.x+1, c1.y, c2.x-3, c2.y, color);
+                }
+        }
+
+        // gui.drawBox(49,71,51,78,0x00000000,0x80FF0000);
+
+        if ($form.find('input#showMutationRates')[0].checked) {
+                var pos = 100;
+                for (var mutation in genome.mutationRates) { // in pairs
+                        var rate = genome.mutationRates[mutation];
+                        $aigui.find('#show #mutation').html( mutation +': '+ rate +'<br>' );
+                        //gui.drawText(100, pos, mutation + ": " + rate, 0xFF000000, 10);
+                        pos = pos + 8;
+                }
+        }
+}
+
+function displayBanner () {
+  $aigui.find('div#banner').toggle(!$form.find('input#hideBanner')[0].checked);
+}
+
+function limitFPS () {
+  if ($form.find('input#limitFPS')[0].checked) {
+    fpsinterval = 10; //TODO: Add a call to main loop in afterdraw
+  } else {
+    fpsinterval = 0;
+  }
+  clearInterval(mainLoopInterval);
+  mainLoopInterval = setInterval(asyncMainLoop, fpsinterval);
+}
+
+function createAiGUI () {
+  $aigui = $('<div id="aigui"></div>').appendTo('#canvas');
+
+  var $banner = $('<div id="banner" style="background: 0xD0FFFFFF"></div>').appendTo($aigui);
+  $banner.append('<label for="gen">Gen <span id="gen" class="data"></span></label>');
+  $banner.append('<label for="fitness">Fitness: <span id="fitness" class="data"></span></label>');
+  $banner.append('<label for="maxFitness">Max Fitness: <span id="maxFitness" class="data"></span></label>');
+  $banner.append('<label for="duration">Duration: <span id="duration" class="data"></span></label>');
+
+  var $show = $('<div id="show"></div>').appendTo($aigui);
+  $show.append('<span id="buttonNames" class="data"></span>');
+  $show.append('<span id="mutations" class="data"></span>');
+
+  $form = $('<form id="fitnessSettings"><h1>Fitness Settings</h1></form>').appendTo('#emulator');
+
+  $form.append('<label for="maxFitness">Max Fitness: <input id="maxFitness" type="text" value="'+ Math.floor(pool.maxFitness) +'"></label>');
+  $form.append('<label for="showNetwork"><input checked id="showNetwork" type="checkbox"> Show Map</label>');
+  $form.append('<label for="showMutationRates"><input checked id="showMutationRates" type="checkbox"> Show M-Rates</label>');
+  $form.append( $('<input id="restartButton" type="button" value="Restart">').click(restartPool) );
+  $form.append( $('<input id="saveButton" type="button" value="Save">').click(savePool) );
+  $form.append( $('<input id="loadButton" type="button" value="Load">').click(loadPool) );
+  $form.append('<label for="saveLoadFile">Save/Load: <input id="saveLoadFile" type="text" value="'+ Filename +'.pool"></label>');
+  $form.append( $('<input id="playTopButton" type="button" value="Play Top">').click(playTop) );
+  $('<label for="hideBanner"><input id="hideBanner" type="checkbox"> Hide Banner</label>').appendTo($form).find('input').click(displayBanner);
+  $('<label for="limitFPS"><input disabled id="limitFPS" type="checkbox"> Limit FPS</label>').appendTo($form).find('input').click(limitFPS); // review bug
+}
