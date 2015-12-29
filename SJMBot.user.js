@@ -10,23 +10,23 @@
 
 
 //Sample code
-image = new Image();
-image.crossOrigin = 'anonymous';
-image.src = 'http://i.imgur.com/V8EOXwT.png';
-window.agar.hooks.cellSkin = function(cell, old_skin) {
-    //if (old_skin) return old_skin;
-    if (cell.isVirus) return image;
-    if (!cell.isVirus) return null;
-    return null;
-}
+// var image = new Image();
+// image.crossOrigin = 'anonymous';
+// image.src = 'http://i.imgur.com/V8EOXwT.png';
+// window.agar.hooks.cellSkin = function(cell, old_skin) {
+//     //if (old_skin) return old_skin;
+//     if (cell.isVirus) return image;
+//     if (!cell.isVirus) return null;
+//     return null;
+// }
 
-window.agar.hooks.cellColor = function(cell, old_color) {
-    //if (old_color) return old_color;
-    if (isMe(cell)) return "#FFFFFF";
-    if (!cell.isVirus) return "#000000";
-    
-    return old_color;
-}
+// window.agar.hooks.cellColor = function(cell, old_color) {
+//     //if (old_color) return old_color;
+//     if (isMe(cell)) return "#FFFFFF";
+//     if (!cell.isVirus) return "#000000";
+//     
+//     return old_color;
+// }
 
 
 var boxRadius = 6;
@@ -54,6 +54,14 @@ var context = canvas.getContext("2d");
 var padding = 10;
 var gridWidth = canvas.width - padding;
 var gridHeight = canvas.height - padding;
+
+var boxSize = boxRadius * 2 + 1;
+
+var cellWidth = gridWidth / boxSize;
+   // console.log(cellWidth);
+var cellHeight = gridHeight / boxSize;
+  //  console.log(cellHeight);
+var scanInterval = 50;
 
 var currentFrame = 0
 
@@ -233,7 +241,7 @@ var $form; // jQuery's
 var $aigui;
 //var rightmost;
 var timeout;
-
+var controller = {};
 // from getPositions
 //var marioX;
 //var marioY;
@@ -245,10 +253,10 @@ var timeout;
 //console.log('Loaded pre mario crap');
 //-- For SMW, make sure you have a save state named "DP1.state" at the beginning of a level,
 //-- and put a copy in both the Lua folder and the root directory of BizHawk.
-Filename = "mariox.state"
+var Filename = "mariox.state"
 
 // based mostly on self.nes.keyboard.state1_keys
-ButtonNames = [
+var ButtonNames = [
   'UP',
   'DOWN',
   'LEFT',
@@ -257,32 +265,32 @@ ButtonNames = [
   'SHOOT', // last command is being ignored, right now! :(
 ];
 
-BoxRadius = 6;
-InputSize = (BoxRadius*2+1)*(BoxRadius*2+1);
+var BoxRadius = 6;
+var InputSize = (BoxRadius*2+1)*(BoxRadius*2+1);
 
-Inputs = InputSize+1;
-Outputs = ButtonNames.length;
+var Inputs = InputSize+1;
+var Outputs = ButtonNames.length;
 
-Population = 300; // species
-DeltaDisjoint = 2.0;
-DeltaWeights = 0.4;
-DeltaThreshold = 1.0;
+var Population = 300; // species
+var DeltaDisjoint = 2.0;
+var DeltaWeights = 0.4;
+var DeltaThreshold = 1.0;
 
-StaleSpecies = 15;
+var StaleSpecies = 15;
 
-MutateConnectionsChance = 0.25;
-PerturbChance = 0.90;
-CrossoverChance = 0.75;
-LinkMutationChance = 2.0;
-NodeMutationChance = 0.50;
-BiasMutationChance = 0.40;
-StepSize = 0.1;
-DisableMutationChance = 0.4;
-EnableMutationChance = 0.2;
+var MutateConnectionsChance = 0.25;
+var PerturbChance = 0.90;
+var CrossoverChance = 0.75;
+var LinkMutationChance = 2.0;
+var NodeMutationChance = 0.50;
+var BiasMutationChance = 0.40;
+var StepSize = 0.1;
+var DisableMutationChance = 0.4;
+var EnableMutationChance = 0.2;
 
-TimeoutConstant = 20;
+var TimeoutConstant = 20;
 
-MaxNodes = 1000000;
+var MaxNodes = 1000000;
 
 
 
@@ -915,7 +923,7 @@ function newGeneration () {
 
         pool.generation++;
 
-        writeFile("autobackup.gen." + pool.generation + "." + "default");//$form.find('input#saveLoadFile').val());
+        writeFile("autobackup.gen." + pool.generation + "." + $form.find('input#saveLoadFile').val());
         writeFile("autobackup.pool");
 }
 
@@ -1011,7 +1019,7 @@ function playTop () {
         pool.currentSpecies = maxSpecies;
         pool.currentGenome = maxGenome;
         pool.maxFitness = maxFitness;
-        //$form.find('input#maxFitness').val(Math.floor(pool.maxFitness));
+        $form.find('input#maxFitness').val(Math.floor(pool.maxFitness));
         initializeRun();
         pool.currentFrame++;
         return;
@@ -1090,7 +1098,7 @@ function writeFile (filename) { // using indexedDB for the win! :)
 }
 
 function savePool () {
-        var filename = "default" //$form.find('input#saveLoadFile').val();
+        var filename = $form.find('input#saveLoadFile').val();
         writeFile(filename);
 }
 
@@ -1122,7 +1130,7 @@ function loadFileCallback (poolContent) {
         }
         pool.currentSpecies = 0;
 
-        //$form.find('input#maxFitness').val(Math.floor(pool.maxFitness));
+        $form.find('input#maxFitness').val(Math.floor(pool.maxFitness));
 
         while ( fitnessAlreadyMeasured() ) {
                 nextGenome();
@@ -1133,7 +1141,7 @@ function loadFileCallback (poolContent) {
 }
 
 function loadPool () {
-        var filename = "default" //$form.find('input#saveLoadFile').val();
+        var filename = $form.find('input#saveLoadFile').val();
         loadFile(filename);
 }
 
@@ -1193,10 +1201,10 @@ function loadState (stateName) { // review
 if ( isEmpty(pool) ) {
         initializePool();
 }
-console.log("Loaded!!!");
+//console.log("Loaded!!!");
 //loadIndexedDB('gameState', loadGameStateCallback);
 
-// createAiGUI();
+createAiGUI();
 
 loadFile("autobackup.pool");
 
@@ -1207,7 +1215,7 @@ loadFile("autobackup.pool");
 // }, self.nes.opts.fpsInterval);
 
 // those are currently in the "global" scope, but only being used here
-var fpsinterval = 0;
+var fpsinterval = 100;
 var mainLoopInterval = null;
 var markDurationInterval = null;
 
@@ -1297,12 +1305,12 @@ function asyncMainLoop () { // infinite, async equivalent
          if ($form.find('input#showNetwork')[0].checked) {
                  displayGenome(genome);
         }
-
+// 
         if (pool.currentFrame%5 == 0) {
                 evaluateCurrent();
         }
-
-        //joypadSet(controller);
+// 
+//         //joypadSet(controller);
         moveCell(controller);
         
         //getPositions();
@@ -1329,7 +1337,7 @@ function asyncMainLoop () { // infinite, async equivalent
 
         //var timeoutBonus = pool.currentFrame / 4;
         if (!isPlayerPlaying() && !reviving && !firststart) {
-                var fitness = bestSize //- (pool.currentFrame / 3);
+                var fitness = bestSize; //- (pool.currentFrame / 3);
                 if (bestSize > 3186) {
                         fitness = fitness + 1000;
                 }
@@ -1340,13 +1348,13 @@ function asyncMainLoop () { // infinite, async equivalent
 
                 if (fitness > pool.maxFitness) {
                         pool.maxFitness = fitness;
-                        //$form.find('input#maxFitness').val(Math.floor(pool.maxFitness));
+                        $form.find('input#maxFitness').val(Math.floor(pool.maxFitness));
 
-                        writeFile( "autobackup.fitness." + fitness + "." + "default" ); //$form.find('input#saveLoadFile').val() );
+                        writeFile( "autobackup.fitness." + fitness + "." + $form.find('input#saveLoadFile').val() );
                         writeFile("autobackup.pool");
                 }
 
-                console.log("Gen " + pool.generation + " species " + pool.currentSpecies + " genome " + pool.currentGenome + " fitness: " + fitness);
+                //console.log("Gen " + pool.generation + " species " + pool.currentSpecies + " genome " + pool.currentGenome + " fitness: " + fitness);
                 pool.currentSpecies = 0; // array bonds
                 pool.currentGenome = 0; // array bonds
                 while ( fitnessAlreadyMeasured() ) {
@@ -1368,9 +1376,9 @@ function asyncMainLoop () { // infinite, async equivalent
                 }
         }
 
-        //$aigui.find('#banner #gen').text( pool.generation + ' species ' + pool.currentSpecies + ' genome ' + pool.currentGenome + ' (' + Math.floor(measured/total*100) + '%)' );
-        //$aigui.find('#banner #fitness').text( Math.floor(rightmost - (pool.currentFrame) / 2 - (timeout + timeoutBonus)*2/3) );
-        //$aigui.find('#banner #maxFitness').text( Math.floor(pool.maxFitness) );
+        $aigui.find('#banner #gen').text( pool.generation + ' species ' + pool.currentSpecies + ' genome ' + pool.currentGenome + ' (' + Math.floor(measured/total*100) + '%)' );
+        $aigui.find('#banner #fitness').text( bestSize );
+        $aigui.find('#banner #maxFitness').text( Math.floor(pool.maxFitness) );
 
         pool.currentFrame++;
 
@@ -1395,17 +1403,12 @@ function getTime () {
 
 function getInputs(){
     var inputs = [];
-    var boxSize = boxRadius * 2 + 1;
 
-    var cellWidth = gridWidth / boxSize;
-    var cellHeight = gridHeight / boxSize;
-    
-    var scanInterval = 30;
     
     var scanCount = 0;
-    //var inputs = [];
-    context.fillStyle="#FF0000";
-    context.font="20px Georgia";
+
+   // context.fillStyle="#FF0000";
+   // context.font="20px Georgia";
     for (var x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale; x <=window.agar.rawViewport.x + (gridWidth / 2) / transform.scale - 1; x += cellWidth / transform.scale) {        
         for (var y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale; y <= window.agar.rawViewport.y + (gridHeight / 2) / transform.scale - 1; y += cellHeight / transform.scale) {
             var cellThreatLevel = 0.0;
@@ -1425,36 +1428,39 @@ function getInputs(){
             inputs.push(cellThreatLevel);
             cellThreatLevel = 0;
             scanCount = 0;
+            
+            //inputs.push(1);
         }
     }
     return inputs;    
 }
 
 function moveCell(controler){
-    var x = 0;
-    var y = 0;
-    if (controler['KEY_UP'] = 1 && controler['KEY_LEFT']){
+    var x = window.agar.rawViewport.x;
+    var y = window.agar.rawViewport.y;
+    
+    if (controler['KEY_UP'] && controler['KEY_LEFT']){
         x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale;
         y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale;
-    } else if (controler['KEY_UP'] = 1 && controler['KEY_RIGHT']){
+    } else if (controler['KEY_UP'] && controler['KEY_RIGHT']){
         x = window.agar.rawViewport.x + (gridWidth / 2) / transform.scale;
         y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale;
-    } else if (controler['KEY_DOWN'] = 1 && controler['KEY_LEFT']){
+    } else if (controler['KEY_DOWN'] && controler['KEY_LEFT']){
         x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale;
         y = window.agar.rawViewport.y + (gridHeight / 2) / transform.scale;
-    } else if (controler['KEY_DOWN'] = 1 && controler['KEY_RIGHT']){
+    } else if (controler['KEY_DOWN'] && controler['KEY_RIGHT']){
         x = window.agar.rawViewport.x + (gridWidth / 2) / transform.scale;
         y = window.agar.rawViewport.y + (gridHeight / 2) / transform.scale;
-    } else if (controler['KEY_UP'] = 1){
+    } else if (controler['KEY_UP']){
         x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale;
         y = window.agar.rawViewport.y / transform.scale;
-    } else if (controler['KEY_DOWN'] = 1){
+    } else if (controler['KEY_DOWN']){
         x = window.agar.rawViewport.x + (gridWidth / 2) / transform.scale;
         y = window.agar.rawViewport.y / transform.scale;
-    } else if (controler['KEY_LEFT'] = 1){
+    } else if (controler['KEY_LEFT']){
         x = window.agar.rawViewport.x / transform.scale;
         y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale;
-    } else if (controler['KEY_RIGHT'] = 1){
+    } else if (controler['KEY_RIGHT']){
         x = window.agar.rawViewport.x / transform.scale;
         y = window.agar.rawViewport.y + (gridHeight / 2) / transform.scale;
     }
@@ -1466,16 +1472,9 @@ function moveCell(controler){
 
 }
 
-console.log("Loaded all code!!");
-//HOOOOOOOOOOOOOOOOOOO
-startMainLoop();
-
 //AI GUI
 // 
-// #aigui .data {
-//   color: gray;
-//   padding-right: 1em;
-// }
+
 
 function displayGenome (genome) { // review - at least the `gui.`
         var network = genome.network;
@@ -1497,7 +1496,8 @@ function displayGenome (genome) { // review - at least the `gui.`
         biasCell.y = 110;
         biasCell.value = network.neurons[Inputs-1].value; // array bonds
         cells[Inputs-1] = biasCell; // array bonds
-
+        
+        $aigui.find('#show #buttonNames').html('');
         for (var o = 0; o<Outputs; o++) {
                 cell = {};
                 cell.x = 220;
@@ -1510,7 +1510,7 @@ function displayGenome (genome) { // review - at least the `gui.`
                 } else {
                         color = 0xFF000000;
                 }
-                $aigui.find('#show #buttonNames').html( ButtonNames[o] +'<br>' );
+                $aigui.find('#show #buttonNames').append( ButtonNames[o] + ' ' + cell.value + ' <br>' );
                 //gui.drawText(223, 24+8*o, ButtonNames[o], color, 9);
         }
 
@@ -1599,12 +1599,12 @@ function displayGenome (genome) { // review - at least the `gui.`
         }
 
         // gui.drawBox(49,71,51,78,0x00000000,0x80FF0000);
-
+        $aigui.find('#show #mutation').html('');
         if ($form.find('input#showMutationRates')[0].checked) {
                 var pos = 100;
                 for (var mutation in genome.mutationRates) { // in pairs
                         var rate = genome.mutationRates[mutation];
-                        $aigui.find('#show #mutation').html( mutation +': '+ rate +'<br>' );
+                        $aigui.find('#show #mutation').append( mutation +': '+ rate +'<br>' );
                         //gui.drawText(100, pos, mutation + ": " + rate, 0xFF000000, 10);
                         pos = pos + 8;
                 }
@@ -1626,28 +1626,41 @@ function limitFPS () {
 }
 
 function createAiGUI () {
-  $aigui = $('<div id="aigui"></div>').appendTo('#canvas');
+  $aigui = $('<div id="aigui" style="position: absolute"></div>').appendTo('body');
 
-  var $banner = $('<div id="banner" style="background: 0xD0FFFFFF"></div>').appendTo($aigui);
+  var $banner = $('<div id="banner" style="background: 0xD0FFFFFF position: relative"></div>').appendTo($aigui);
   $banner.append('<label for="gen">Gen <span id="gen" class="data"></span></label>');
   $banner.append('<label for="fitness">Fitness: <span id="fitness" class="data"></span></label>');
   $banner.append('<label for="maxFitness">Max Fitness: <span id="maxFitness" class="data"></span></label>');
   $banner.append('<label for="duration">Duration: <span id="duration" class="data"></span></label>');
 
-  var $show = $('<div id="show"></div>').appendTo($aigui);
+  var $show = $('<div id="show" style="position: relative" align="center"></div>').appendTo($aigui);
   $show.append('<span id="buttonNames" class="data"></span>');
   $show.append('<span id="mutations" class="data"></span>');
 
-  $form = $('<form id="fitnessSettings"><h1>Fitness Settings</h1></form>').appendTo('#emulator');
+  $form = $('<form id="fitnessSettings" style="position: relative; width: 10%;"><h1>Fitness Settings</h1></form>').appendTo('body');
 
   $form.append('<label for="maxFitness">Max Fitness: <input id="maxFitness" type="text" value="'+ Math.floor(pool.maxFitness) +'"></label>');
   $form.append('<label for="showNetwork"><input checked id="showNetwork" type="checkbox"> Show Map</label>');
   $form.append('<label for="showMutationRates"><input checked id="showMutationRates" type="checkbox"> Show M-Rates</label>');
-  $form.append( $('<input id="restartButton" type="button" value="Restart">').click(restartPool) );
+  $form.append( $('<input $id="restartButton" type="button" value="Restart">').click(restartPool) );
   $form.append( $('<input id="saveButton" type="button" value="Save">').click(savePool) );
   $form.append( $('<input id="loadButton" type="button" value="Load">').click(loadPool) );
   $form.append('<label for="saveLoadFile">Save/Load: <input id="saveLoadFile" type="text" value="'+ Filename +'.pool"></label>');
   $form.append( $('<input id="playTopButton" type="button" value="Play Top">').click(playTop) );
   $('<label for="hideBanner"><input id="hideBanner" type="checkbox"> Hide Banner</label>').appendTo($form).find('input').click(displayBanner);
   $('<label for="limitFPS"><input disabled id="limitFPS" type="checkbox"> Limit FPS</label>').appendTo($form).find('input').click(limitFPS); // review bug
+  
+  
+  // #aigui .data {
+//   color: gray;
+//   padding-right: ;
+// }
+  $('#aigui .data').css('color', 'grey');
+  $('#aigui .data').css('padding-right', '2em');
 }
+
+
+console.log("Loaded all code!!");
+//HOOOOOOOOOOOOOOOOOOO
+startMainLoop();
