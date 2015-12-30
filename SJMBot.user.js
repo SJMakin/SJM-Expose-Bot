@@ -72,35 +72,49 @@ window.agar.hooks.afterDraw = function() {
     var cellWidth = gridWidth / boxSize;
     var cellHeight = gridHeight / boxSize;
     
+    if(cellWidth * boxSize != gridWidth){
+        console.log(cellWidth + " : " + boxSize + " : " + gridWidth);
+    }
+    
     var scanInterval = 30;
     
     var scanCount = 0;
-    //var inputs = [];
+    var inputs = [];
     context.fillStyle="#FF0000";
     context.font="20px Georgia";
-    for (var x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale; x <=window.agar.rawViewport.x + (gridWidth / 2) / transform.scale; x += cellWidth / transform.scale) {        
-        for (var y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale; y <= window.agar.rawViewport.y + (gridHeight / 2) / transform.scale; y += cellHeight / transform.scale) {
+    var currentX = window.agar.rawViewport.x;
+    var currentY = window.agar.rawViewport.y;
+    var currentScale = transform.scale;
+    var count = 0;
+    
+    for (var x = currentX - (gridWidth / 2) / currentScale; x <currentX + (gridWidth / 2) / currentScale -1; x += cellWidth / currentScale) {        
+        count++;
+        for (var y = currentY - (gridHeight / 2) / currentScale; y < currentY + (gridHeight / 2) / currentScale -1; y += cellHeight / currentScale) {
             var cellThreatLevel = 0.0;
             //for each interval within the cell get the color and add it to the total - we need a value between 1 and -1
             //positive values are other players and virus, negative is food
             //todo: color the cells greyscale accoring to theat level
             for (var cellX = x; cellX < x + cellWidth; cellX += scanInterval){
                 for (var cellY = y; cellY < y + cellHeight; cellY += scanInterval){
-                    var pixelData = context.getImageData(cellX * transform.scale + transform.x, cellY * transform.scale + transform.y, 1, 1).data;
+                    var pixelData = context.getImageData(cellX * currentScale + transform.x, cellY * currentScale + transform.y, 1, 1).data;
                     cellThreatLevel += ((pixelData[0] + pixelData[1] + pixelData[2])/765 * -1) + 1;//255; //grey tone
                     scanCount += 1;
                }  
             } 
             cellThreatLevel = cellThreatLevel / scanCount; //mean
             cellThreatLevel = +cellThreatLevel.toFixed(1)
-            context.fillText(cellThreatLevel, x, y)
-            //inputs.push(cellThreatLevel);
+            context.fillText(cellThreatLevel, x + cellWidth/2, y + cellHeight/2)
+            inputs.push(cellThreatLevel);
             cellThreatLevel = 0;
             scanCount = 0;
         }
+        if (count > boxSize){
+            console.log('x = ' + x + 'start x = ' + (currentX - (gridWidth / 2) / currentScale) + 'x < ' + (currentX + (gridWidth / 2) / currentScale) + ' x += ' + (cellWidth / currentScale));
+        }
+        
     }    
-    
-    
+    context.font="40px Georgia";
+    context.fillText(inputs.length, window.agar.rawViewport.x - (gridWidth / 2) / transform.scale, window.agar.rawViewport.y - (gridHeight / 2) / transform.scale);
 //     for (var x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale; x <=window.agar.rawViewport.x + (gridWidth / 2) / transform.scale; x += cellWidth / transform.scale) {
 //         context.moveTo(x, window.agar.rawViewport.y - (gridHeight / 2) / transform.scale);
 //         context.lineTo(x, window.agar.rawViewport.y + (gridHeight / 2) / transform.scale);
