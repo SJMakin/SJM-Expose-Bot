@@ -10,23 +10,23 @@
 
 
 //Sample code
-// var image = new Image();
-// image.crossOrigin = 'anonymous';
-// image.src = 'http://i.imgur.com/V8EOXwT.png';
-// window.agar.hooks.cellSkin = function(cell, old_skin) {
-//     //if (old_skin) return old_skin;
-//     if (cell.isVirus) return image;
-//     if (!cell.isVirus) return null;
-//     return null;
-// }
+var image = new Image();
+image.crossOrigin = 'anonymous';
+image.src = 'http://i.imgur.com/V8EOXwT.png';
+window.agar.hooks.cellSkin = function(cell, old_skin) {
+    //if (old_skin) return old_skin;
+    if (cell.isVirus) return image;
+    if (!cell.isVirus) return null;
+    return null;
+}
 
-// window.agar.hooks.cellColor = function(cell, old_color) {
-//     //if (old_color) return old_color;
-//     if (isMe(cell)) return "#FFFFFF";
-//     if (!cell.isVirus) return "#000000";
-//     
-//     return old_color;
-// }
+window.agar.hooks.cellColor = function(cell, old_color) {
+    //if (old_color) return old_color;
+    if (isMe(cell)) return "#FFFFFF";
+    if (!cell.isVirus) return "#000000";
+    
+    return old_color;
+}
 
 
 var boxRadius = 6;
@@ -54,14 +54,6 @@ var context = canvas.getContext("2d");
 var padding = 10;
 var gridWidth = canvas.width - padding;
 var gridHeight = canvas.height - padding;
-
-var boxSize = boxRadius * 2 + 1;
-
-var cellWidth = gridWidth / boxSize;
-   // console.log(cellWidth);
-var cellHeight = gridHeight / boxSize;
-  //  console.log(cellHeight);
-var scanInterval = 50;
 
 var currentFrame = 0
 
@@ -241,7 +233,7 @@ var $form; // jQuery's
 var $aigui;
 //var rightmost;
 var timeout;
-var controller = {};
+
 // from getPositions
 //var marioX;
 //var marioY;
@@ -1201,7 +1193,7 @@ function loadState (stateName) { // review
 if ( isEmpty(pool) ) {
         initializePool();
 }
-//console.log("Loaded!!!");
+console.log("Loaded!!!");
 //loadIndexedDB('gameState', loadGameStateCallback);
 
 createAiGUI();
@@ -1215,7 +1207,7 @@ loadFile("autobackup.pool");
 // }, self.nes.opts.fpsInterval);
 
 // those are currently in the "global" scope, but only being used here
-var fpsinterval = 100;
+var fpsinterval = 0;
 var mainLoopInterval = null;
 var markDurationInterval = null;
 
@@ -1271,7 +1263,7 @@ function manageGameStates () {
                 reviving = true;
                 revivetime = getTime();
                 setTimeout(function(){ closeStats(); }, 1000);       
-                setTimeout(function(){ setNick("Hello"); }, 2000);       
+                setTimeout(function(){ setNick("Hi"); }, 2000);       
   } else if (isPlayerPlaying() && reviving) {
             reviving = false;
             console.log("Done Reviving!");
@@ -1305,12 +1297,12 @@ function asyncMainLoop () { // infinite, async equivalent
          if ($form.find('input#showNetwork')[0].checked) {
                  displayGenome(genome);
         }
-// 
+
         if (pool.currentFrame%5 == 0) {
                 evaluateCurrent();
         }
-// 
-//         //joypadSet(controller);
+
+        //joypadSet(controller);
         moveCell(controller);
         
         //getPositions();
@@ -1337,7 +1329,7 @@ function asyncMainLoop () { // infinite, async equivalent
 
         //var timeoutBonus = pool.currentFrame / 4;
         if (!isPlayerPlaying() && !reviving && !firststart) {
-                var fitness = bestSize; //- (pool.currentFrame / 3);
+                var fitness = bestSize //- (pool.currentFrame / 3);
                 if (bestSize > 3186) {
                         fitness = fitness + 1000;
                 }
@@ -1354,7 +1346,7 @@ function asyncMainLoop () { // infinite, async equivalent
                         writeFile("autobackup.pool");
                 }
 
-                //console.log("Gen " + pool.generation + " species " + pool.currentSpecies + " genome " + pool.currentGenome + " fitness: " + fitness);
+                console.log("Gen " + pool.generation + " species " + pool.currentSpecies + " genome " + pool.currentGenome + " fitness: " + fitness);
                 pool.currentSpecies = 0; // array bonds
                 pool.currentGenome = 0; // array bonds
                 while ( fitnessAlreadyMeasured() ) {
@@ -1377,7 +1369,7 @@ function asyncMainLoop () { // infinite, async equivalent
         }
 
         $aigui.find('#banner #gen').text( pool.generation + ' species ' + pool.currentSpecies + ' genome ' + pool.currentGenome + ' (' + Math.floor(measured/total*100) + '%)' );
-        $aigui.find('#banner #fitness').text( bestSize );
+        $aigui.find('#banner #fitness').text(bestSize);
         $aigui.find('#banner #maxFitness').text( Math.floor(pool.maxFitness) );
 
         pool.currentFrame++;
@@ -1403,12 +1395,17 @@ function getTime () {
 
 function getInputs(){
     var inputs = [];
+    var boxSize = boxRadius * 2 + 1;
 
+    var cellWidth = gridWidth / boxSize;
+    var cellHeight = gridHeight / boxSize;
+    
+    var scanInterval = 30;
     
     var scanCount = 0;
-
-   // context.fillStyle="#FF0000";
-   // context.font="20px Georgia";
+    //var inputs = [];
+    context.fillStyle="#FF0000";
+    context.font="20px Georgia";
     for (var x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale; x <=window.agar.rawViewport.x + (gridWidth / 2) / transform.scale - 1; x += cellWidth / transform.scale) {        
         for (var y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale; y <= window.agar.rawViewport.y + (gridHeight / 2) / transform.scale - 1; y += cellHeight / transform.scale) {
             var cellThreatLevel = 0.0;
@@ -1428,8 +1425,6 @@ function getInputs(){
             inputs.push(cellThreatLevel);
             cellThreatLevel = 0;
             scanCount = 0;
-            
-            //inputs.push(1);
         }
     }
     return inputs;    
@@ -1439,41 +1434,52 @@ function moveCell(controler){
     var x = window.agar.rawViewport.x;
     var y = window.agar.rawViewport.y;
     
+    var doNothing = false;
+        //temp
+    drawCircle(x, y);
+    
     if (controler['KEY_UP'] && controler['KEY_LEFT']){
-        x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale;
-        y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale;
+        x = window.agar.rawViewport.x - (gridWidth / 2);
+        y = window.agar.rawViewport.y - (gridHeight / 2);
     } else if (controler['KEY_UP'] && controler['KEY_RIGHT']){
-        x = window.agar.rawViewport.x + (gridWidth / 2) / transform.scale;
-        y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale;
+        x = window.agar.rawViewport.x + (gridWidth / 2);
+        y = window.agar.rawViewport.y - (gridHeight / 2);
     } else if (controler['KEY_DOWN'] && controler['KEY_LEFT']){
-        x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale;
-        y = window.agar.rawViewport.y + (gridHeight / 2) / transform.scale;
+        x = window.agar.rawViewport.x - (gridWidth / 2);
+        y = window.agar.rawViewport.y + (gridHeight / 2);
     } else if (controler['KEY_DOWN'] && controler['KEY_RIGHT']){
-        x = window.agar.rawViewport.x + (gridWidth / 2) / transform.scale;
-        y = window.agar.rawViewport.y + (gridHeight / 2) / transform.scale;
+        x = window.agar.rawViewport.x + (gridWidth / 2);
+        y = window.agar.rawViewport.y + (gridHeight / 2);
     } else if (controler['KEY_UP']){
-        x = window.agar.rawViewport.x - (gridWidth / 2) / transform.scale;
-        y = window.agar.rawViewport.y / transform.scale;
+        x = window.agar.rawViewport.x;
+        y = window.agar.rawViewport.y - (gridHeight / 2);
     } else if (controler['KEY_DOWN']){
-        x = window.agar.rawViewport.x + (gridWidth / 2) / transform.scale;
-        y = window.agar.rawViewport.y / transform.scale;
+        x = window.agar.rawViewport.x;
+        y = window.agar.rawViewport.y + (gridHeight / 2);
     } else if (controler['KEY_LEFT']){
-        x = window.agar.rawViewport.x / transform.scale;
-        y = window.agar.rawViewport.y - (gridHeight / 2) / transform.scale;
+        x = window.agar.rawViewport.x - (gridWidth / 2);
+        y = window.agar.rawViewport.y;
     } else if (controler['KEY_RIGHT']){
-        x = window.agar.rawViewport.x / transform.scale;
-        y = window.agar.rawViewport.y + (gridHeight / 2) / transform.scale;
+        x = window.agar.rawViewport.x + (gridWidth / 2);
+        y = window.agar.rawViewport.y;
+    } else {
+        doNothing = true;
     }
     
-    x = x*transform.scale + transform.x;
-    y = y*transform.scale + transform.y;
-    
-    canvas.onmousemove({clientX:x, clientY:y});
+  //  if (!doNothing){                
+        //mouse move scaling
+        x = x*transform.scale + transform.x;
+        y = y*transform.scale + transform.y;
+        
+        canvas.onmousemove({clientX:x, clientY:y});
+  //  }
+ 
 
 }
 
+
+
 //AI GUI
-// 
 
 
 function displayGenome (genome) { // review - at least the `gui.`
@@ -1510,7 +1516,7 @@ function displayGenome (genome) { // review - at least the `gui.`
                 } else {
                         color = 0xFF000000;
                 }
-                $aigui.find('#show #buttonNames').append( ButtonNames[o] + ' ' + cell.value + ' <br>' );
+                $aigui.find('#show #buttonNames').append( ButtonNames[o] +' ' + cell.value.toFixed(2) + ' <br>' );
                 //gui.drawText(223, 24+8*o, ButtonNames[o], color, 9);
         }
 
@@ -1599,12 +1605,12 @@ function displayGenome (genome) { // review - at least the `gui.`
         }
 
         // gui.drawBox(49,71,51,78,0x00000000,0x80FF0000);
-        $aigui.find('#show #mutation').html('');
+
         if ($form.find('input#showMutationRates')[0].checked) {
                 var pos = 100;
                 for (var mutation in genome.mutationRates) { // in pairs
                         var rate = genome.mutationRates[mutation];
-                        $aigui.find('#show #mutation').append( mutation +': '+ rate +'<br>' );
+                        $aigui.find('#show #mutation').html( mutation +': '+ rate +'<br>' );
                         //gui.drawText(100, pos, mutation + ": " + rate, 0xFF000000, 10);
                         pos = pos + 8;
                 }
@@ -1626,38 +1632,39 @@ function limitFPS () {
 }
 
 function createAiGUI () {
-  $aigui = $('<div id="aigui" style="position: absolute"></div>').appendTo('body');
+  $aigui = $('<div id="aigui"></div>').appendTo('body');
 
-  var $banner = $('<div id="banner" style="background: 0xD0FFFFFF position: relative"></div>').appendTo($aigui);
+  var $banner = $('<div id="banner" style="background: 0xD0FFFFFF; position: absolute"></div>').appendTo($aigui);
   $banner.append('<label for="gen">Gen <span id="gen" class="data"></span></label>');
   $banner.append('<label for="fitness">Fitness: <span id="fitness" class="data"></span></label>');
   $banner.append('<label for="maxFitness">Max Fitness: <span id="maxFitness" class="data"></span></label>');
   $banner.append('<label for="duration">Duration: <span id="duration" class="data"></span></label>');
 
-  var $show = $('<div id="show" style="position: relative" align="center"></div>').appendTo($aigui);
+  var $show = $('<div id="show" align="center" style="position: relative;">></div>').appendTo($aigui);
   $show.append('<span id="buttonNames" class="data"></span>');
   $show.append('<span id="mutations" class="data"></span>');
 
-  $form = $('<form id="fitnessSettings" style="position: relative; width: 10%;"><h1>Fitness Settings</h1></form>').appendTo('body');
+  $form = $('<form id="fitnessSettings" style="position: relative; width: 10%"><h1>Fitness Settings</h1></form>').appendTo('body');
 
   $form.append('<label for="maxFitness">Max Fitness: <input id="maxFitness" type="text" value="'+ Math.floor(pool.maxFitness) +'"></label>');
   $form.append('<label for="showNetwork"><input checked id="showNetwork" type="checkbox"> Show Map</label>');
   $form.append('<label for="showMutationRates"><input checked id="showMutationRates" type="checkbox"> Show M-Rates</label>');
-  $form.append( $('<input $id="restartButton" type="button" value="Restart">').click(restartPool) );
+  $form.append( $('<input id="restartButton" type="button" value="Restart">').click(restartPool) );
   $form.append( $('<input id="saveButton" type="button" value="Save">').click(savePool) );
   $form.append( $('<input id="loadButton" type="button" value="Load">').click(loadPool) );
   $form.append('<label for="saveLoadFile">Save/Load: <input id="saveLoadFile" type="text" value="'+ Filename +'.pool"></label>');
   $form.append( $('<input id="playTopButton" type="button" value="Play Top">').click(playTop) );
   $('<label for="hideBanner"><input id="hideBanner" type="checkbox"> Hide Banner</label>').appendTo($form).find('input').click(displayBanner);
-  $('<label for="limitFPS"><input disabled id="limitFPS" type="checkbox"> Limit FPS</label>').appendTo($form).find('input').click(limitFPS); // review bug
+  $('<label for="limitFPS"><input disabled id="limitFPS" type="checkbox"> Limit FPS</label>').appendTo($form).find('input').click(limitFPS); // review bug // was disabled - changed in agar
   
-  
-  // #aigui .data {
+  // 
+// #aigui .data {
 //   color: gray;
-//   padding-right: ;
+//   padding-right: 1em;
 // }
-  $('#aigui .data').css('color', 'grey');
-  $('#aigui .data').css('padding-right', '2em');
+ 
+ $('#aigui .data').css('color', 'gray');
+ $('#aigui .data').css('padding-right', '1em');
 }
 
 
